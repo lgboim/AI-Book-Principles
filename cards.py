@@ -151,7 +151,7 @@ def generate():
 @app.route('/tts', methods=['POST'])
 def tts():
     data = request.json
-    text = data.get('text')
+    texts = data.get('texts')  # Expecting a list of texts to process
     api_key = request.headers.get('Authorization')
 
     if not api_key:
@@ -160,41 +160,46 @@ def tts():
     # Extract the actual API key from the "Bearer <api_key>" format
     api_key = api_key.split(' ')[1]
 
-    if not text.strip():
-        return jsonify({"error": "Text content is empty"}), 400
-
     client = OpenAI(api_key=api_key)
+    audio_urls = []
 
-    try:
-        existing_card = Card.query.filter_by(content=text).first()
-        if existing_card and existing_card.audio_path:
-            return jsonify({"url": existing_card.audio_path})
+    for text in texts:
+        if not text.strip():
+            continue  # Skip empty text
 
-        file_id = str(uuid.uuid4())
-        file_path = os.path.join('static', f'output_{file_id}.mp3')
+        try:
+            existing_card = Card.query.filter_by(content=text).first()
+            if existing_card and existing_card.audio_path:
+                audio_urls.append(existing_card.audio_path)
+                continue
 
-        response = client.audio.speech.create(
-            model="tts-1",
-            voice="alloy",
-            input=text,
-        )
+            file_id = str(uuid.uuid4())
+            file_path = os.path.join('static', f'output_{file_id}.mp3')
 
-        with open(file_path, 'wb') as audio_file:
-            audio_file.write(response.content)
+            response = client.audio.speech.create(
+                model="tts-1",
+                voice="alloy",
+                input=text,
+            )
 
-        if existing_card:
-            existing_card.audio_path = file_path
-            db.session.commit()
-        else:
-            new_card = Card(book_title="Unknown", principle="Unknown", content=text, audio_path=file_path)
-            db.session.add(new_card)
-            db.session.commit()
+            with open(file_path, 'wb') as audio_file:
+                audio_file.write(response.content)
 
-        return jsonify({"url": file_path})
+            if existing_card:
+                existing_card.audio_path = file_path
+                db.session.commit()
+            else:
+                new_card = Card(book_title="Unknown", principle="Unknown", content=text, audio_path=file_path)
+                db.session.add(new_card)
+                db.session.commit()
 
-    except Exception as e:
-        app.logger.error(f"Error generating TTS: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+            audio_urls.append(file_path)
+
+        except Exception as e:
+            app.logger.error(f"Error generating TTS: {str(e)}")
+
+    return jsonify({"urls": audio_urls})
+
 
 
 if __name__ == "__main__":
