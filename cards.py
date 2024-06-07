@@ -102,20 +102,16 @@ def generate():
     # Extract the actual API key from the "Bearer <api_key>" format
     api_key = api_key.split(' ')[1]
 
-    # Check if the card already exists in the database
     try:
+        # Check if the card already exists in the database
         existing_card = Card.query.filter_by(book_title=book_title, principle=principle).first()
-    except Exception as e:
-        return jsonify({"error": f"Database query failed: {str(e)}"}), 500
+        if existing_card:
+            return jsonify({"sections": existing_card.content.split("\n\n")})
 
-    if existing_card:
-        return jsonify({"sections": existing_card.content.split("\n\n")})
+        client = OpenAI(api_key=api_key)
 
-    client = OpenAI(api_key=api_key)
+        prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle."""
 
-    prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle."""
-
-    try:
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "user", "content": prompt}],
@@ -133,6 +129,7 @@ def generate():
         return jsonify({"sections": card_sections})
 
     except Exception as e:
+        app.logger.error(f"Error generating card: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/tts', methods=['POST'])
@@ -149,19 +146,15 @@ def tts():
 
     client = OpenAI(api_key=api_key)
 
-    # Check if the audio already exists in the database
     try:
+        # Check if the audio already exists in the database
         existing_card = Card.query.filter_by(content=text).first()
-    except Exception as e:
-        return jsonify({"error": f"Database query failed: {str(e)}"}), 500
+        if existing_card and existing_card.audio_path:
+            return jsonify({"url": existing_card.audio_path})
 
-    if existing_card and existing_card.audio_path:
-        return jsonify({"url": existing_card.audio_path})
+        file_id = str(uuid.uuid4())
+        file_path = os.path.join('static', f'output_{file_id}.mp3')
 
-    file_id = str(uuid.uuid4())
-    file_path = os.path.join('static', f'output_{file_id}.mp3')
-
-    try:
         response = client.audio.speech.create(
             model="tts-1",
             voice="alloy",
@@ -184,6 +177,7 @@ def tts():
         return jsonify({"url": file_path})
 
     except Exception as e:
+        app.logger.error(f"Error generating TTS: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
