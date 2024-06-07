@@ -138,6 +138,7 @@
         let currentCardIndex = 0;
         let cardSections = [];
         let audioUrls = [];
+        let isPlaying = false;
 
         function showLoading() {
             document.getElementById('loading').style.display = 'block';
@@ -277,48 +278,45 @@
             showLoading();
             setFeedback('Generating audio...');
 
-            const response = await fetch('/tts', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({ texts })
-            });
+            for (let i = 0; i < texts.length; i++) {
+                const text = texts[i];
+                
+                const response = await fetch('/tts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({ texts: [text] })
+                });
+
+                const data = await response.json();
+                if (data.urls && data.urls[0]) {
+                    audioUrls.push(data.urls[0]);
+                    if (!isPlaying) {
+                        playAudio();
+                    }
+                }
+            }
 
             hideLoading();
-            const data = await response.json();
-            if (data.urls) {
-                playAudioSequentially(data.urls);
-            } else {
-                console.error('Error generating TTS:', data.error);
-                setFeedback('Error generating audio.');
-            }
+            setFeedback('Audio is being played.');
         }
 
-        function playAudioSequentially(urls) {
-            if (urls.length === 0) {
-                setFeedback('No audio to play.');
+        function playAudio() {
+            if (currentCardIndex >= audioUrls.length) {
+                setFeedback('Finished playing all audios.');
+                isPlaying = false;
                 return;
             }
-            
-            let currentAudioIndex = 0;
 
-            function playNextAudio() {
-                if (currentAudioIndex >= urls.length) {
-                    setFeedback('Finished playing all audios.');
-                    return;
-                }
+            const audioPlayer = document.getElementById('audio-player');
+            audioPlayer.src = audioUrls[currentCardIndex];
+            audioPlayer.play();
+            currentCardIndex++;
+            isPlaying = true;
 
-                const audioPlayer = document.getElementById('audio-player');
-                audioPlayer.src = urls[currentAudioIndex];
-                audioPlayer.play();
-                currentAudioIndex++;
-
-                audioPlayer.onended = playNextAudio;
-            }
-
-            playNextAudio();
+            audioPlayer.onended = playAudio;
         }
     </script>
 </body>
