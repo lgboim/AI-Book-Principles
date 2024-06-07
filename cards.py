@@ -165,7 +165,6 @@ def tts():
 
     for text in texts:
         if not text.strip():
-            # Log the skipping of empty text
             app.logger.info("Skipping empty text.")
             continue  # Skip empty text
 
@@ -201,8 +200,6 @@ def tts():
             app.logger.error(f"Error generating TTS for text: {text} - {str(e)}")
 
     return jsonify({"urls": audio_urls})
-
-
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
