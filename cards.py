@@ -27,10 +27,6 @@ class Card(db.Model):
         self.content = content
         self.audio_path = audio_path
 
-@app.before_first_request
-def create_tables():
-    db.create_all()
-
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -39,7 +35,7 @@ def index():
 def suggest_books():
     data = request.json
     subject = data.get('subject')
-    api_key = request.headers.get('Authorization').split(' ')[1] if 'Authorization' in request.headers else None
+    api_key = data.get('api_key')
 
     if not api_key:
         return jsonify({"error": "API key is missing"}), 400
@@ -61,7 +57,7 @@ def suggest_books():
 def suggest_principles():
     data = request.json
     book_title = data.get('book_title')
-    api_key = request.headers.get('Authorization').split(' ')[1] if 'Authorization' in request.headers else None
+    api_key = data.get('api_key')
 
     if not api_key:
         return jsonify({"error": "API key is missing"}), 400
@@ -84,7 +80,7 @@ def generate():
     data = request.json
     book_title = data.get('book_title')
     principle = data.get('principle')
-    api_key = request.headers.get('Authorization').split(' ')[1] if 'Authorization' in request.headers else None
+    api_key = data.get('api_key')
 
     if not api_key:
         return jsonify({"error": "API key is missing"}), 400
@@ -118,7 +114,7 @@ def generate():
 def tts():
     data = request.json
     text = data.get('text')
-    api_key = request.headers.get('Authorization').split(' ')[1] if 'Authorization' in request.headers else None
+    api_key = data.get('api_key')
 
     if not api_key:
         return jsonify({"error": "API key is missing"}), 400
@@ -157,4 +153,3 @@ def tts():
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-
