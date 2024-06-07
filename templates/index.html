@@ -11,12 +11,13 @@
             font-family: 'Playfair Display', serif;
             background-color: #f8f9fa;
             display: flex;
+            flex-direction: column;
             height: 100vh;
             margin: 0;
             overflow: hidden;
         }
         .sidebar {
-            width: 300px;
+            width: 100%;
             background-color: #343a40;
             color: white;
             padding: 20px;
@@ -102,20 +103,8 @@
         
         /* Mobile responsive styles */
         @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
             .sidebar {
-                width: 100%;
-                height: auto;
-            }
-            .main {
-                width: 100%;
                 padding: 10px;
-                gap: 10px;
-            }
-            .card {
-                max-width: 100%;
             }
             .sidebar h1 {
                 font-size: 1.5rem;
