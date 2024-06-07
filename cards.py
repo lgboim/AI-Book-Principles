@@ -2,8 +2,18 @@ from flask import Flask, render_template, request, jsonify
 from openai import OpenAI
 import os
 import uuid
+from models import db, Card
 
 app = Flask(__name__)
+
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db.init_app(app)
+
+@app.before_first_request
+def create_tables():
+    db.create_all()
 
 @app.route('/')
 def index():
@@ -63,6 +73,11 @@ def generate():
     if not api_key:
         return jsonify({"error": "API key is missing"}), 400
 
+    # Check if the card already exists in the database
+    existing_card = Card.query.filter_by(book_title=book_title, principle=principle).first()
+    if existing_card:
+        return jsonify({"sections": existing_card.content.split("\n\n")})
+
     client = OpenAI(api_key=api_key)
 
     prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle."""
@@ -75,6 +90,11 @@ def generate():
 
     card_content = response.choices[0].message.content
     card_sections = card_content.split("\n\n")
+
+    # Save the new card to the database
+    new_card = Card(book_title=book_title, principle=principle, content=card_content)
+    db.session.add(new_card)
+    db.session.commit()
     
     return jsonify({"sections": card_sections})
 
@@ -89,6 +109,11 @@ def tts():
 
     client = OpenAI(api_key=api_key)
 
+    # Check if the audio already exists in the database
+    existing_card = Card.query.filter_by(content=text).first()
+    if existing_card and existing_card.audio_path:
+        return jsonify({"url": existing_card.audio_path})
+
     file_id = str(uuid.uuid4())
     file_path = os.path.join('static', f'output_{file_id}.mp3')
 
@@ -101,6 +126,15 @@ def tts():
     # Handle the response content
     with open(file_path, 'wb') as audio_file:
         audio_file.write(response.content)
+
+    # Update the card with the audio path
+    if existing_card:
+        existing_card.audio_path = file_path
+        db.session.commit()
+    else:
+        new_card = Card(book_title="Unknown", principle="Unknown", content=text, audio_path=file_path)
+        db.session.add(new_card)
+        db.session.commit()
 
     return jsonify({"url": file_path})
 
