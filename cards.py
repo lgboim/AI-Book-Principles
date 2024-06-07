@@ -8,7 +8,8 @@ from flask_migrate import Migrate
 app = Flask(__name__)
 
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("postgres://", "postgresql://", 1)
+DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///local_database.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -40,7 +41,6 @@ def suggest_books():
     if not api_key:
         return jsonify({"error": "API key is missing"}), 400
 
-    # Extract the actual API key from the "Bearer <api_key>" format
     api_key = api_key.split(' ')[1]
 
     client = OpenAI(api_key=api_key)
@@ -69,8 +69,14 @@ def suggest_principles():
     if not api_key:
         return jsonify({"error": "API key is missing"}), 400
 
-    # Extract the actual API key from the "Bearer <api_key>" format
     api_key = api_key.split(' ')[1]
+
+    # Check if principles for the given book title already exist in the database
+    existing_principles = db.session.query(Card.principle).filter_by(book_title=book_title).distinct().all()
+
+    if existing_principles:
+        principles = [principle[0] for principle in existing_principles]
+        return jsonify({"principles": principles})
 
     client = OpenAI(api_key=api_key)
 
@@ -84,6 +90,13 @@ def suggest_principles():
         )
 
         principles = response.choices[0].message.content.split(', ')
+
+        # Save principles to the database as placeholders
+        for principle in principles:
+            new_card = Card(book_title=book_title, principle=principle, content="")
+            db.session.add(new_card)
+        db.session.commit()
+
         return jsonify({"principles": principles})
 
     except Exception as e:
@@ -99,16 +112,13 @@ def generate():
     if not api_key:
         return jsonify({"error": "API key is missing"}), 400
 
-    # Extract the actual API key from the "Bearer <api_key>" format
     api_key = api_key.split(' ')[1]
 
     try:
-        # Log the input parameters
         app.logger.info(f"Generating card for book: {book_title}, principle: {principle}")
 
-        # Check if the card already exists in the database
         existing_card = Card.query.filter_by(book_title=book_title, principle=principle).first()
-        if existing_card:
+        if existing_card and existing_card.content:
             app.logger.info("Card found in database, returning existing card.")
             return jsonify({"sections": existing_card.content.split("\n\n")})
 
@@ -125,9 +135,11 @@ def generate():
         card_content = response.choices[0].message.content
         card_sections = card_content.split("\n\n")
 
-        # Save the new card to the database
-        new_card = Card(book_title=book_title, principle=principle, content=card_content)
-        db.session.add(new_card)
+        if existing_card:
+            existing_card.content = card_content
+        else:
+            new_card = Card(book_title=book_title, principle=principle, content=card_content)
+            db.session.add(new_card)
         db.session.commit()
 
         return jsonify({"sections": card_sections})
@@ -145,13 +157,11 @@ def tts():
     if not api_key:
         return jsonify({"error": "API key is missing"}), 400
 
-    # Extract the actual API key from the "Bearer <api_key>" format
     api_key = api_key.split(' ')[1]
 
     client = OpenAI(api_key=api_key)
 
     try:
-        # Check if the audio already exists in the database
         existing_card = Card.query.filter_by(content=text).first()
         if existing_card and existing_card.audio_path:
             return jsonify({"url": existing_card.audio_path})
@@ -165,11 +175,9 @@ def tts():
             input=text,
         )
 
-        # Handle the response content
         with open(file_path, 'wb') as audio_file:
             audio_file.write(response.content)
 
-        # Update the card with the audio path
         if existing_card:
             existing_card.audio_path = file_path
             db.session.commit()
