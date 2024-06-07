@@ -151,7 +151,7 @@ def generate():
 @app.route('/tts', methods=['POST'])
 def tts():
     data = request.json
-    texts = data.get('texts')  # Expecting a list of texts to process
+    texts = data.get('texts', [])  # Expecting a list of texts to process
     api_key = request.headers.get('Authorization')
 
     if not api_key:
@@ -165,6 +165,8 @@ def tts():
 
     for text in texts:
         if not text.strip():
+            # Log the skipping of empty text
+            app.logger.info("Skipping empty text.")
             continue  # Skip empty text
 
         try:
@@ -196,7 +198,7 @@ def tts():
             audio_urls.append(file_path)
 
         except Exception as e:
-            app.logger.error(f"Error generating TTS: {str(e)}")
+            app.logger.error(f"Error generating TTS for text: {text} - {str(e)}")
 
     return jsonify({"urls": audio_urls})
 
