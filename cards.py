@@ -103,7 +103,11 @@ def generate():
     api_key = api_key.split(' ')[1]
 
     # Check if the card already exists in the database
-    existing_card = Card.query.filter_by(book_title=book_title, principle=principle).first()
+    try:
+        existing_card = Card.query.filter_by(book_title=book_title, principle=principle).first()
+    except Exception as e:
+        return jsonify({"error": f"Database query failed: {str(e)}"}), 500
+
     if existing_card:
         return jsonify({"sections": existing_card.content.split("\n\n")})
 
@@ -146,7 +150,11 @@ def tts():
     client = OpenAI(api_key=api_key)
 
     # Check if the audio already exists in the database
-    existing_card = Card.query.filter_by(content=text).first()
+    try:
+        existing_card = Card.query.filter_by(content=text).first()
+    except Exception as e:
+        return jsonify({"error": f"Database query failed: {str(e)}"}), 500
+
     if existing_card and existing_card.audio_path:
         return jsonify({"url": existing_card.audio_path})
 
