@@ -99,6 +99,42 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Mobile responsive styles */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            .main {
+                width: 100%;
+                padding: 10px;
+                gap: 10px;
+            }
+            .card {
+                max-width: 100%;
+            }
+            .sidebar h1 {
+                font-size: 1.5rem;
+            }
+            .sidebar p {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar input, .sidebar select, .sidebar button {
+                font-size: 0.9rem;
+                padding: 8px;
+            }
+            .card {
+                font-size: 1rem;
+                padding: 15px;
+            }
+        }
     </style>
 </head>
 <body>
