@@ -157,7 +157,11 @@ def tts():
     if not api_key:
         return jsonify({"error": "API key is missing"}), 400
 
+    # Extract the actual API key from the "Bearer <api_key>" format
     api_key = api_key.split(' ')[1]
+
+    if not text.strip():
+        return jsonify({"error": "Text content is empty"}), 400
 
     client = OpenAI(api_key=api_key)
 
@@ -191,6 +195,7 @@ def tts():
     except Exception as e:
         app.logger.error(f"Error generating TTS: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
