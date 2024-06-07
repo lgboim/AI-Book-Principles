@@ -2,14 +2,30 @@ from flask import Flask, render_template, request, jsonify
 from openai import OpenAI
 import os
 import uuid
-from models import db, Card
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("postgres://", "postgresql://", 1)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db.init_app(app)
+
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+class Card(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    book_title = db.Column(db.String(200), nullable=False)
+    principle = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    audio_path = db.Column(db.String(200), nullable=True)
+
+    def __init__(self, book_title, principle, content, audio_path=None):
+        self.book_title = book_title
+        self.principle = principle
+        self.content = content
+        self.audio_path = audio_path
 
 @app.before_first_request
 def create_tables():
@@ -30,7 +46,7 @@ def suggest_books():
 
     client = OpenAI(api_key=api_key)
 
-    prompt = f"Suggest a list of books on the subject '{subject}'. Provide just the titles in a comma-separated list. No quotes or numbers."
+    prompt = f"Suggest a list of books on the subject '{subject}'. Provide just the titles in a comma-separated list."
 
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -95,7 +111,7 @@ def generate():
     new_card = Card(book_title=book_title, principle=principle, content=card_content)
     db.session.add(new_card)
     db.session.commit()
-    
+
     return jsonify({"sections": card_sections})
 
 @app.route('/tts', methods=['POST'])
@@ -141,3 +157,4 @@ def tts():
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+
