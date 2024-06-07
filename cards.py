@@ -103,9 +103,13 @@ def generate():
     api_key = api_key.split(' ')[1]
 
     try:
+        # Log the input parameters
+        app.logger.info(f"Generating card for book: {book_title}, principle: {principle}")
+
         # Check if the card already exists in the database
         existing_card = Card.query.filter_by(book_title=book_title, principle=principle).first()
         if existing_card:
+            app.logger.info("Card found in database, returning existing card.")
             return jsonify({"sections": existing_card.content.split("\n\n")})
 
         client = OpenAI(api_key=api_key)
