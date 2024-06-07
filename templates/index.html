@@ -120,7 +120,7 @@
         <select id="principle-list" onchange="generateCard()">
             <option value="">Choose a principle</option>
         </select>
-        <button onclick="readCards()">Read All Cards</button>
+        <button onclick="generateTTS()">Read All Cards</button>
         <div id="loading" class="loading"></div>
         <div id="feedback" class="feedback"></div>
     </div>
@@ -268,58 +268,57 @@
             }
         }
 
-        async function readCards() {
+        async function generateTTS() {
+            const cardContainer = document.getElementById('card-container');
+            const texts = Array.from(cardContainer.querySelectorAll('.card')).map(card => card.innerText.trim()).filter(text => text);
+
             const apiKey = document.getElementById('api-key').value;
-
-            if (cardSections.length === 0) {
-                setFeedback('No cards to read.');
-                return;
-            }
-
-            audioUrls = [];
-            currentCardIndex = 0;
 
             showLoading();
             setFeedback('Generating audio...');
 
-            for (let i = 0; i < cardSections.length; i++) {
-                const text = cardSections[i];
-
-                const response = await fetch('/tts', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({ text: text })
-                });
-
-                const data = await response.json();
-                audioUrls.push(data.url);
-
-                // Play the first audio as soon as it's ready
-                if (i === 0) {
-                    playAudio();
-                }
-            }
+            const response = await fetch('/tts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({ texts })
+            });
 
             hideLoading();
-            setFeedback('Audio is being played.');
+            const data = await response.json();
+            if (data.urls) {
+                playAudioSequentially(data.urls);
+            } else {
+                console.error('Error generating TTS:', data.error);
+                setFeedback('Error generating audio.');
+            }
         }
 
-        function playAudio() {
-            if (currentCardIndex >= audioUrls.length) {
-                currentCardIndex = 0;
-                setFeedback('Audio playback finished.');
+        function playAudioSequentially(urls) {
+            if (urls.length === 0) {
+                setFeedback('No audio to play.');
                 return;
             }
+            
+            let currentAudioIndex = 0;
 
-            const audioPlayer = document.getElementById('audio-player');
-            audioPlayer.src = audioUrls[currentCardIndex];
-            audioPlayer.play();
-            currentCardIndex++;
+            function playNextAudio() {
+                if (currentAudioIndex >= urls.length) {
+                    setFeedback('Finished playing all audios.');
+                    return;
+                }
 
-            audioPlayer.onended = playAudio;
+                const audioPlayer = document.getElementById('audio-player');
+                audioPlayer.src = urls[currentAudioIndex];
+                audioPlayer.play();
+                currentAudioIndex++;
+
+                audioPlayer.onended = playNextAudio;
+            }
+
+            playNextAudio();
         }
     </script>
 </body>
