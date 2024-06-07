@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Books</title>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&display=swap">
+    <style>
+        body {
+            font-family: 'Playfair Display', serif;
+            background-color: #f8f9fa;
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 300px;
+            background-color: #343a40;
+            color: white;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .sidebar h1 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        .sidebar p {
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+        .sidebar input, .sidebar select, .sidebar button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .sidebar button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .sidebar button:hover {
+            background-color: #0056b3;
+        }
+        .main {
+            flex-grow: 1;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+        .card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            font-size: 1.2rem;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .card p, .card h2, .card h3 {
+            margin: 0;
+        }
+        .audio-container {
+            display: none;
+            margin-top: 20px;
+        }
+        .feedback {
+            margin-top: 10px;
+            font-size: 1rem;
+            color: #007bff;
+        }
+        .loading {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 2s linear infinite;
+            margin: 10px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h1>About Books</h1>
+        <p>Use this tool to generate knowledge cards about books and their principles. Follow these steps:</p>
+        <ol>
+            <li>Enter your API key.</li>
+            <li>Enter a subject to get book suggestions.</li>
+            <li>Select a book and then select a principle.</li>
+            <li>Generate and read the cards.</li>
+        </ol>
+        <input type="password" id="api-key" placeholder="Enter your API Key">
+        <input type="text" id="subject" placeholder="Enter the Subject">
+        <button onclick="suggestBooks()">Suggest Books</button>
+        <select id="book-list" onchange="suggestPrinciples()">
+            <option value="">Choose a book</option>
+        </select>
+        <select id="principle-list" onchange="generateCard()">
+            <option value="">Choose a principle</option>
+        </select>
+        <button onclick="readCards()">Read All Cards</button>
+        <div id="loading" class="loading"></div>
+        <div id="feedback" class="feedback"></div>
+    </div>
+
+    <div class="main" id="card-container">
+        <!-- Cards will be dynamically inserted here -->
+    </div>
+    
+    <div class="audio-container">
+        <audio id="audio-player" controls></audio>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        let currentCardIndex = 0;
+        let cardSections = [];
+        let audioUrls = [];
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function setFeedback(message) {
+            document.getElementById('feedback').innerText = message;
+        }
+
+        async function suggestBooks() {
+            const apiKey = document.getElementById('api-key').value;
+            const subject = document.getElementById('subject').value;
+
+            if (!subject) {
+                setFeedback('Please enter a subject.');
+                return;
+            }
+
+            showLoading();
+            setFeedback('Fetching books...');
+
+            const response = await fetch('/suggest_books', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({ subject: subject })
+            });
+
+            hideLoading();
+            const data = await response.json();
+            const bookList = document.getElementById('book-list');
+            bookList.innerHTML = '<option value="">Choose a book</option>'; // Set default option
+
+            data.books.forEach(book => {
+                const option = document.createElement('option');
+                option.value = book;
+                option.textContent = book;
+                bookList.appendChild(option);
+            });
+
+            setFeedback('Books loaded. Please choose a book.');
+        }
+
+        async function suggestPrinciples() {
+            const apiKey = document.getElementById('api-key').value;
+            const bookTitle = document.getElementById('book-list').value;
+
+            if (!bookTitle) {
+                setFeedback('Please choose a book.');
+                return;
+            }
+
+            showLoading();
+            setFeedback('Fetching principles...');
+
+            const response = await fetch('/suggest_principles', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({ book_title: bookTitle })
+            });
+
+            hideLoading();
+            const data = await response.json();
+            const principleList = document.getElementById('principle-list');
+            principleList.innerHTML = '<option value="">Choose a principle</option>'; // Set default option
+
+            data.principles.forEach(principle => {
+                const option = document.createElement('option');
+                option.value = principle;
+                option.textContent = principle;
+                principleList.appendChild(option);
+            });
+
+            setFeedback('Principles loaded. Please choose a principle.');
+        }
+
+        async function generateCard() {
+            const apiKey = document.getElementById('api-key').value;
+            const bookTitle = document.getElementById('book-list').value;
+            const principle = document.getElementById('principle-list').value;
+
+            if (!bookTitle || !principle) {
+                setFeedback('Please choose a book and a principle.');
+                return;
+            }
+
+            showLoading();
+            setFeedback('Generating card...');
+
+            const response = await fetch('/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({ book_title: bookTitle, principle: principle })
+            });
+
+            hideLoading();
+            const data = await response.json();
+            cardSections = data.sections;
+
+            const cardContainer = document.getElementById('card-container');
+            cardContainer.innerHTML = ''; // Clear previous cards
+
+            cardSections.forEach((section, index) => {
+                if (section.trim()) {  // Ensure the section is not empty
+                    const card = document.createElement('div');
+                    card.classList.add('card');
+                    card.innerHTML = marked.parse(section);
+                    cardContainer.appendChild(card);
+                }
+            });
+
+            if (cardContainer.innerHTML === '') {
+                setFeedback('No valid card content generated.');
+            } else {
+                setFeedback('Card generated.');
+            }
+        }
+
+        async function readCards() {
+            const apiKey = document.getElementById('api-key').value;
+
+            if (cardSections.length === 0) {
+                setFeedback('No cards to read.');
+                return;
+            }
+
+            audioUrls = [];
+            currentCardIndex = 0;
+
+            showLoading();
+            setFeedback('Generating audio...');
+
+            for (let i = 0; i < cardSections.length; i++) {
+                const text = cardSections[i];
+
+                const response = await fetch('/tts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                const data = await response.json();
+                audioUrls.push(data.url);
+
+                // Play the first audio as soon as it's ready
+                if (i === 0) {
+                    playAudio();
+                }
+            }
+
+            hideLoading();
+            setFeedback('Audio is being played.');
+        }
+
+        function playAudio() {
+            if (currentCardIndex >= audioUrls.length) {
+                currentCardIndex = 0;
+                setFeedback('Audio playback finished.');
+                return;
+            }
+
+            const audioPlayer = document.getElementById('audio-player');
+            audioPlayer.src = audioUrls[currentCardIndex];
+            audioPlayer.play();
+            currentCardIndex++;
+
+            audioPlayer.onended = playAudio;
+        }
+    </script>
+</body>
+</html>
