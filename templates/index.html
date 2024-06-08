@@ -6,6 +6,7 @@
     <title>AI Book Principles</title>
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"> <!-- Add FontAwesome for icons -->
     <style>
         body {
             font-family: 'Playfair Display', serif;
@@ -271,12 +272,20 @@
             font-size: 1.3rem;
         }
 
+        .icon-button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 10px;
+            font-size: 1.5rem;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>AI Book Principles</h1>
-        <button onclick="toggleMenu()">Menu</button>
+        <button class="icon-button" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
     </div>
     <div class="menu">
         <input type="password" id="api-key" placeholder="Enter your API Key">
@@ -292,7 +301,7 @@
             <option value="1.75">1.75x Speed</option>
             <option value="2">2x Speed</option>
         </select>
-        <button onclick="suggestBooks()">Suggest Books</button>
+        <button class="button-modern" onclick="suggestBooks()"><i class="fas fa-book"></i> Suggest Books</button>
         <select id="book-list" onchange="suggestPrinciples()">
             <option value="">Choose a book</option>
         </select>
@@ -309,12 +318,11 @@
     <div class="feedback" id="feedback"></div>
     
     <div class="audio-container">
-        <button onclick="pauseAudio()">Pause</button>
-        <button onclick="resumeAudio()">Resume</button>
-        <button onclick="stopAudio()">Stop</button>
+        <button class="icon-button" onclick="pauseAudio()"><i class="fas fa-pause"></i></button>
+        <button class="icon-button" onclick="resumeAudio()"><i class="fas fa-play"></i></button>
+        <button class="icon-button" onclick="stopAudio()"><i class="fas fa-stop"></i></button>
         <audio id="audio-player" controls></audio>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         let currentCardIndex = 0;
@@ -322,8 +330,9 @@
         let audioUrls = [];
         let isPlaying = false;
         let audioQueue = [];
-        let waitingForAudioToFinish = false;  // New flag to indicate if we are waiting for audio to finish
+        let waitingForAudioToFinish = false;  // Flag to indicate if we are waiting for audio to finish
         const audioPlayer = document.getElementById('audio-player');
+        let isPaused = false; // Flag to indicate if the audio is paused
 
         function toggleMenu() {
             const menu = document.querySelector('.menu');
@@ -543,7 +552,7 @@
                 isPlaying = false;
 
                 // Only move to the next principle after all audio has finished
-                if (!waitingForAudioToFinish) {
+                if (!waitingForAudioToFinish && !isPaused) {
                     waitingForAudioToFinish = true;  // Set the flag to true
                     const principleList = document.getElementById('principle-list');
                     const nextPrincipleIndex = principleList.selectedIndex + 1;
@@ -576,11 +585,13 @@
 
         function pauseAudio() {
             audioPlayer.pause();
+            isPaused = true;
             setFeedback('Audio paused.');
         }
 
         function resumeAudio() {
             audioPlayer.play();
+            isPaused = false;
             setFeedback('Audio resumed.');
         }
 
@@ -588,8 +599,17 @@
             audioPlayer.pause();
             audioPlayer.currentTime = 0;
             audioQueue = [];
+            isPaused = false;
             setFeedback('Audio playback stopped.');
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const startButton = document.createElement('button');
+            startButton.innerText = 'Start';
+            startButton.classList.add('button-modern');
+            startButton.addEventListener('click', generateCard);
+            document.body.appendChild(startButton);
+        });
 
     </script>
 
