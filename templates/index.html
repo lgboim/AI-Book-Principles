@@ -448,8 +448,6 @@
             }
         }
 
-
-
         function playNextAudio() {
             if (audioQueue.length === 0) {
                 setFeedback('Finished playing all audios.');
@@ -469,8 +467,10 @@
             audio.src = url;
 
             audio.oncanplaythrough = () => {
+                // Workaround for iOS autoplay restrictions
                 audioPlayer.src = url;
                 audioPlayer.playbackRate = parseFloat(document.getElementById('speed-select').value);
+                audioPlayer.load(); // Ensure the audio is loaded
                 audioPlayer.play().then(() => {
                     isPlaying = true;
                     isPaused = false;
