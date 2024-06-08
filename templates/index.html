@@ -229,177 +229,213 @@
         let isPlaying = false;
         let audioQueue = [];
         const audioPlayer = document.getElementById('audio-player');
-    
+
         function toggleMenu() {
             const menu = document.querySelector('.menu');
             menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'flex' : 'none';
         }
-    
+
         function showLoading() {
             document.getElementById('loading').style.display = 'block';
         }
-    
+
         function hideLoading() {
             document.getElementById('loading').style.display = 'none';
         }
-    
+
         function setFeedback(message) {
             document.getElementById('feedback').innerText = message;
         }
-    
+
         async function suggestBooks() {
             const apiKey = document.getElementById('api-key').value;
             const subject = document.getElementById('subject').value;
-    
+
             if (!subject) {
                 setFeedback('Please enter a subject.');
                 return;
             }
-    
+
             showLoading();
             setFeedback('Fetching books...');
-    
-            const response = await fetch('/suggest_books', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({ subject: subject })
-            });
-    
-            hideLoading();
-            const data = await response.json();
-            const bookList = document.getElementById('book-list');
-            bookList.innerHTML = '<option value="">Choose a book</option>'; // Set default option
-    
-            data.books.forEach(book => {
-                const option = document.createElement('option');
-                option.value = book;
-                option.textContent = book;
-                bookList.appendChild(option);
-            });
-    
-            setFeedback('Books loaded. Please choose a book.');
-        }
-    
-        async function suggestPrinciples() {
-            const apiKey = document.getElementById('api-key').value;
-            const bookTitle = document.getElementById('book-list').value;
-            const language = document.getElementById('language-select').value;
-    
-            if (!bookTitle) {
-                setFeedback('Please choose a book.');
-                return;
-            }
-    
-            showLoading();
-            setFeedback('Fetching principles...');
-    
-            const response = await fetch('/suggest_principles', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({ book_title: bookTitle, language: language })  // Pass language
-            });
-    
-            hideLoading();
-            const data = await response.json();
-            const principleList = document.getElementById('principle-list');
-            principleList.innerHTML = '<option value="">Choose a principle</option>'; // Set default option
-    
-            data.principles.forEach(principle => {
-                const option = document.createElement('option');
-                option.value = principle;
-                option.textContent = principle;
-                principleList.appendChild(option);
-            });
-    
-            setFeedback('Principles loaded. Please choose a principle.');
-        }
-    
-        async function generateCard() {
-            const apiKey = document.getElementById('api-key').value;
-            const bookTitle = document.getElementById('book-list').value;
-            const principle = document.getElementById('principle-list').value;
-            const language = document.getElementById('language-select').value;
-    
-            if (!bookTitle || !principle) {
-                setFeedback('Please choose a book and a principle.');
-                return;
-            }
-    
-            showLoading();
-            setFeedback('Generating card...');
-    
-            const response = await fetch('/generate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({ book_title: bookTitle, principle: principle, language: language })  // Pass language
-            });
-    
-            hideLoading();
-            const data = await response.json();
-            cardSections = data.sections;
-    
-            const cardContainer = document.getElementById('card-container');
-            cardContainer.innerHTML = ''; // Clear previous cards
-    
-            cardSections.forEach((section, index) => {
-                if (section.trim()) {  // Ensure the section is not empty
-                    const card = document.createElement('div');
-                    card.classList.add('card');
-                    card.innerHTML = marked.parse(section);
-                    cardContainer.appendChild(card);
-                }
-            });
-    
-            if (cardContainer.innerHTML === '') {
-                setFeedback('No valid card content generated.');
-            } else {
-                setFeedback('Card generated.');
-                generateTTS(cardSections);
-            }
-        }
-    
-        async function generateTTS(texts) {
-            const apiKey = document.getElementById('api-key').value;
-            showLoading();
-            setFeedback('Generating audio...');
-    
-            for (let i = 0; i < texts.length; i++) {
-                const text = texts[i];
-    
-                if (!text.trim()) continue; // Skip empty text sections
-    
-                const response = await fetch('/tts', {
+
+            try {
+                const response = await fetch('/suggest_books', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${apiKey}`
                     },
-                    body: JSON.stringify({ texts: [text] })
+                    body: JSON.stringify({ subject: subject })
                 });
-    
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+
                 const data = await response.json();
-                if (data.urls && data.urls[0]) {
-                    audioUrls.push(data.urls[0]);
-                    audioQueue.push(data.urls[0]);
-                    if (!isPlaying) {
-                        playNextAudio();
+                const bookList = document.getElementById('book-list');
+                bookList.innerHTML = '<option value="">Choose a book</option>'; // Set default option
+
+                data.books.forEach(book => {
+                    const option = document.createElement('option');
+                    option.value = book;
+                    option.textContent = book;
+                    bookList.appendChild(option);
+                });
+
+                setFeedback('Books loaded. Please choose a book.');
+            } catch (error) {
+                setFeedback(`Failed to fetch books: ${error.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function suggestPrinciples() {
+            const apiKey = document.getElementById('api-key').value;
+            const bookTitle = document.getElementById('book-list').value;
+            const language = document.getElementById('language-select').value;
+
+            if (!bookTitle) {
+                setFeedback('Please choose a book.');
+                return;
+            }
+
+            showLoading();
+            setFeedback('Fetching principles...');
+
+            try {
+                const response = await fetch('/suggest_principles', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({ book_title: bookTitle, language: language })  // Pass language
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const principleList = document.getElementById('principle-list');
+                principleList.innerHTML = '<option value="">Choose a principle</option>'; // Set default option
+
+                data.principles.forEach(principle => {
+                    const option = document.createElement('option');
+                    option.value = principle;
+                    option.textContent = principle;
+                    principleList.appendChild(option);
+                });
+
+                setFeedback('Principles loaded. Please choose a principle.');
+            } catch (error) {
+                setFeedback(`Failed to fetch principles: ${error.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function generateCard() {
+            const apiKey = document.getElementById('api-key').value;
+            const bookTitle = document.getElementById('book-list').value;
+            const principle = document.getElementById('principle-list').value;
+            const language = document.getElementById('language-select').value;
+
+            if (!bookTitle || !principle) {
+                setFeedback('Please choose a book and a principle.');
+                return;
+            }
+
+            showLoading();
+            setFeedback('Generating card...');
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({ book_title: bookTitle, principle: principle, language: language })  // Pass language
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                cardSections = data.sections;
+
+                const cardContainer = document.getElementById('card-container');
+                cardContainer.innerHTML = ''; // Clear previous cards
+
+                cardSections.forEach((section, index) => {
+                    if (section.trim()) {  // Ensure the section is not empty
+                        const card = document.createElement('div');
+                        card.classList.add('card');
+                        card.innerHTML = marked.parse(section);
+                        cardContainer.appendChild(card);
+                    }
+                });
+
+                if (cardContainer.innerHTML === '') {
+                    setFeedback('No valid card content generated.');
+                } else {
+                    setFeedback('Card generated.');
+                    generateTTS(cardSections);
+                }
+            } catch (error) {
+                setFeedback(`Failed to generate card: ${error.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function generateTTS(texts) {
+            const apiKey = document.getElementById('api-key').value;
+            showLoading();
+            setFeedback('Generating audio...');
+
+            try {
+                for (let i = 0; i < texts.length; i++) {
+                    const text = texts[i];
+
+                    if (!text.trim()) continue; // Skip empty text sections
+
+                    const response = await fetch('/tts', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify({ texts: [text] })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Error: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    if (data.urls && data.urls[0]) {
+                        audioUrls.push(data.urls[0]);
+                        audioQueue.push(data.urls[0]);
+                        if (!isPlaying) {
+                            playNextAudio();
+                        }
                     }
                 }
+
+                setFeedback('Audio is being played.');
+            } catch (error) {
+                setFeedback(`Failed to generate audio: ${error.message}`);
+            } finally {
+                hideLoading();
             }
-    
-            hideLoading();
-            setFeedback('Audio is being played.');
         }
-    
+
         function playNextAudio() {
             if (audioQueue.length === 0) {
                 setFeedback('Finished playing all audios.');
@@ -412,12 +448,12 @@
                 }
                 return;
             }
-    
+
             const audioUrl = audioQueue.shift();
             audioPlayer.src = audioUrl;
             audioPlayer.play();
             isPlaying = true;
-    
+
             audioPlayer.onended = () => {
                 // Scroll to the top of the next card when the current audio finishes
                 const nextCard = document.querySelector(`.card:nth-child(${currentCardIndex + 2})`);
@@ -428,17 +464,17 @@
                 playNextAudio();
             };
         }
-    
+
         function pauseAudio() {
             audioPlayer.pause();
             setFeedback('Audio paused.');
         }
-    
+
         function resumeAudio() {
             audioPlayer.play();
             setFeedback('Audio resumed.');
         }
-    
+
         function stopAudio() {
             audioPlayer.pause();
             audioPlayer.currentTime = 0;
