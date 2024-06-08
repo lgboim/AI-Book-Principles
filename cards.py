@@ -1,10 +1,9 @@
-from flask import Flask, render_template, request, jsonify, url_for
+from flask import Flask, render_template, request, jsonify
 from openai import OpenAI
 import os
 import uuid
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from models import db, Card  # Import the db instance and Card model from models.py
 
 app = Flask(__name__)
 
@@ -13,8 +12,23 @@ DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///local_database.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db.init_app(app)  # Initialize the db instance with the app
+db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+class Card(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    book_title = db.Column(db.String(200), nullable=False)
+    principle = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    language = db.Column(db.String(10), nullable=False)
+    audio_path = db.Column(db.String(200), nullable=True)
+
+    def __init__(self, book_title, principle, content, language, audio_path=None):
+        self.book_title = book_title
+        self.principle = principle
+        self.content = content
+        self.language = language
+        self.audio_path = audio_path
 
 @app.route('/')
 def index():
