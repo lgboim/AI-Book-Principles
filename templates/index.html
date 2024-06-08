@@ -194,6 +194,10 @@
     <div class="menu">
         <input type="password" id="api-key" placeholder="Enter your API Key">
         <input type="text" id="subject" placeholder="Enter the Subject">
+        <select id="language-select">
+            <option value="en">English</option>
+            <option value="he">Hebrew</option>
+        </select>
         <button onclick="suggestBooks()">Suggest Books</button>
         <select id="book-list" onchange="suggestPrinciples()">
             <option value="">Choose a book</option>
@@ -319,6 +323,7 @@
             const apiKey = document.getElementById('api-key').value;
             const bookTitle = document.getElementById('book-list').value;
             const principle = document.getElementById('principle-list').value;
+            const language = document.getElementById('language-select').value;
 
             if (!bookTitle || !principle) {
                 setFeedback('Please choose a book and a principle.');
@@ -334,7 +339,7 @@
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${apiKey}`
                 },
-                body: JSON.stringify({ book_title: bookTitle, principle: principle })
+                body: JSON.stringify({ book_title: bookTitle, principle: principle, language: language })
             });
 
             hideLoading();
@@ -422,7 +427,6 @@
                 playNextAudio();
             };
         }
-
 
         function pauseAudio() {
             audioPlayer.pause();
