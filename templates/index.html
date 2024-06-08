@@ -569,19 +569,28 @@
             const audioUrl = audioQueue.shift();
             audioPlayer.src = audioUrl;
             audioPlayer.playbackRate = parseFloat(document.getElementById('speed-select').value); // Set playback rate based on speed selection
-            audioPlayer.play();
-            isPlaying = true;
+            audioPlayer.play().then(() => {
+                audioPlayer.onended = () => {
+                    playNextAudio();
+                };
+                audioPlayer.onpause = () => {
+                    isPaused = true;
+                };
+                audioPlayer.onplay = () => {
+                    isPaused = false;
+                };
+                isPlaying = true;
 
-            // Scroll to the card when the audio starts playing
-            const nextCard = document.querySelector(`.card:nth-child(${currentCardIndex + 2})`);
-            if (nextCard) {
-                nextCard.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' });
-                currentCardIndex++;
-            }
-
-            audioPlayer.onended = () => {
-                playNextAudio();
-            };
+                // Scroll to the card when the audio starts playing
+                const nextCard = document.querySelector(`.card:nth-child(${currentCardIndex + 2})`);
+                if (nextCard) {
+                    nextCard.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' });
+                    currentCardIndex++;
+                }
+            }).catch(error => {
+                console.error('Error playing audio:', error);
+                setFeedback('Failed to play audio.');
+            });
         }
 
         function pauseAudio() {
@@ -591,9 +600,13 @@
         }
 
         function resumeAudio() {
-            audioPlayer.play();
-            isPaused = false;
-            setFeedback('Audio resumed.');
+            audioPlayer.play().then(() => {
+                isPaused = false;
+                setFeedback('Audio resumed.');
+            }).catch(error => {
+                console.error('Error resuming audio:', error);
+                setFeedback('Failed to resume audio.');
+            });
         }
 
         function stopAudio() {
@@ -603,6 +616,7 @@
             isPaused = false;
             setFeedback('Audio playback stopped.');
         }
+
 
     </script>
 
