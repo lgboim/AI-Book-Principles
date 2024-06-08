@@ -280,6 +280,10 @@
             padding: 10px;
             font-size: 1.5rem;
         }
+        .highlight {
+            border: 2px solid #007bff;
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
@@ -332,6 +336,7 @@
         let isPlaying = false;
         let audioQueue = [];
         let isPaused = false;
+        let isGeneratingAudio = false; // Flag to track audio generation status
         const audioPlayer = document.getElementById('audio-player');
 
         function toggleMenu() {
@@ -453,6 +458,11 @@
                 return;
             }
 
+            if (isGeneratingAudio) {
+                setFeedback('Please wait until the current audio generation is complete.');
+                return;
+            }
+
             showLoading();
             setFeedback('Generating card...');
 
@@ -475,6 +485,7 @@
 
                 const cardContainer = document.getElementById('card-container');
                 cardContainer.innerHTML = ''; // Clear previous cards
+                currentCardIndex = 0; // Reset current card index
 
                 // Iterate over card sections to display and read them one by one
                 for (const section of cardSections) {
@@ -485,15 +496,13 @@
                     }
                     card.innerHTML = marked.parse(section);
                     cardContainer.appendChild(card);
-
-                    // Generate and play TTS for each section immediately
-                    await generateAndPlayTTS([section]);
                 }
 
                 if (cardContainer.innerHTML === '') {
                     setFeedback('No valid card content generated.');
                 } else {
                     setFeedback('Card generated.');
+                    await generateAndPlayTTS(cardSections);
                 }
             } catch (error) {
                 setFeedback(`Failed to generate card: ${error.message}`);
@@ -508,6 +517,7 @@
             const speed = document.getElementById('speed-select').value; // Get the selected speed
             showLoading();
             setFeedback('Generating audio...');
+            isGeneratingAudio = true;
 
             try {
                 for (const text of texts) {
@@ -530,15 +540,30 @@
                     if (data.urls && data.urls.length > 0) {
                         audioUrls.push(...data.urls);
                         audioQueue.push(...data.urls);
+
                         if (!isPlaying) {
+                            setFeedback('Audio is being played.');
                             playNextAudio();
                         }
                     }
                 }
 
-                setFeedback('Audio is being played.');
+                if (audioQueue.length === 0) {
+                    setFeedback('No audio generated.');
+                    isGeneratingAudio = false;
+
+                    // Move to the next principle if no audio is generated
+                    const principleList = document.getElementById('principle-list');
+                    const nextPrincipleIndex = principleList.selectedIndex + 1;
+                    if (nextPrincipleIndex < principleList.options.length) {
+                        setFeedback('Moving to the next principle...');
+                        principleList.selectedIndex = nextPrincipleIndex;
+                        generateCard();
+                    }
+                }
             } catch (error) {
                 setFeedback(`Failed to generate audio: ${error.message}`);
+                isGeneratingAudio = false;
             } finally {
                 hideLoading();
             }
@@ -549,11 +574,13 @@
             if (audioQueue.length === 0) {
                 setFeedback('Finished playing all audios.');
                 isPlaying = false;
+                isGeneratingAudio = false;
 
-                // Only move to the next principle after all audio has finished
+                // Move to the next principle after all audio has finished
                 const principleList = document.getElementById('principle-list');
                 const nextPrincipleIndex = principleList.selectedIndex + 1;
                 if (nextPrincipleIndex < principleList.options.length) {
+                    setFeedback('Moving to the next principle...');
                     principleList.selectedIndex = nextPrincipleIndex;
                     generateCard();
                 }
@@ -567,10 +594,20 @@
                 isPlaying = true;
                 isPaused = false;
 
-                // Scroll to the card when the audio starts playing
-                const nextCard = document.querySelector(`.card:nth-child(${currentCardIndex + 1})`);
-                if (nextCard) {
-                    nextCard.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' });
+                // Highlight and scroll to the current card when the audio starts playing
+                const currentCard = document.querySelector(`.card:nth-child(${currentCardIndex + 1})`);
+                if (currentCard) {
+                    currentCard.classList.add('highlight');
+                    currentCard.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' });
+
+                    // Remove highlight from the previous card
+                    if (currentCardIndex > 0) {
+                        const previousCard = document.querySelector(`.card:nth-child(${currentCardIndex})`);
+                        if (previousCard) {
+                            previousCard.classList.remove('highlight');
+                        }
+                    }
+
                     currentCardIndex++;
                 }
             }).catch(error => {
@@ -614,6 +651,7 @@
             isPaused = false;
             isPlaying = false;
             setFeedback('Audio playback stopped.');
+            isGeneratingAudio = false;
         }
     </script>
 
