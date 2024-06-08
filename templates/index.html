@@ -567,7 +567,7 @@
             }
 
             const audioUrl = audioQueue.shift();
-            audioPlayer.src = audioUrl;
+            audioPlayer.src = `/${audioUrl}`;
             audioPlayer.playbackRate = parseFloat(document.getElementById('speed-select').value); // Set playback rate based on speed selection
             audioPlayer.play().then(() => {
                 isPlaying = true;
@@ -594,6 +594,7 @@
                 isPaused = false;
             };
         }
+
 
         function pauseAudio() {
             audioPlayer.pause();
