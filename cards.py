@@ -20,17 +20,15 @@ class Card(db.Model):
     book_title = db.Column(db.String(200), nullable=False)
     principle = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    language = db.Column(db.String(10), nullable=False)  # Add this line
+    language = db.Column(db.String(10), nullable=False)
     audio_path = db.Column(db.String(200), nullable=True)
 
     def __init__(self, book_title, principle, content, language, audio_path=None):
         self.book_title = book_title
         self.principle = principle
         self.content = content
-        self.language = language  # Add this line
+        self.language = language
         self.audio_path = audio_path
-
-
 
 @app.route('/')
 def index():
@@ -97,7 +95,7 @@ def suggest_principles():
 
         # Save principles to the database as placeholders
         for principle in principles:
-            new_card = Card(book_title=book_title, principle=principle, content="")
+            new_card = Card(book_title=book_title, principle=principle, content="", language=data.get('language', 'en'))
             db.session.add(new_card)
         db.session.commit()
 
@@ -130,7 +128,7 @@ def generate():
         client = OpenAI(api_key=api_key)
 
         if language == 'he':
-            prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. Not call it in this names, use meaningful titles. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle. Generate in Hebrew."""
+            prompt = f"""צור כרטיס מידע מפורט ותמציתי עבור העקרון "{principle}" מתוך הספר "{book_title}". כלול חלקים: מידע מפתיע, מושג, תובנה מרכזית, קטליזטור חדשנות, תוכנית פעולה, ספר משחקים אמיתי, מלכודות נפוצות, סיכום מהיר, והצהרת השפעה. אל תקרא לזה בשמות הללו, השתמש בכותרות משמעותיות. וודא שכל כרטיס הוא עצמאי וברור, ומספק מספיק פרטים כדי שהקורא יוכל להבין וליישם את העקרון."""
         else:
             prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. Not call it in this names, use meaningful titles. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle. Generate in English."""
 
@@ -155,8 +153,6 @@ def generate():
     except Exception as e:
         app.logger.error(f"Error generating card: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
-
 
 @app.route('/tts', methods=['POST'])
 def tts():
@@ -210,7 +206,6 @@ def tts():
             app.logger.error(f"Error generating TTS for text: {text} - {str(e)}")
 
     return jsonify({"urls": audio_urls})
-
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
