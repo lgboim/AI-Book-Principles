@@ -167,9 +167,13 @@ def tts():
         try:
             existing_card = Card.query.filter_by(content=text, language=language).first()
             if existing_card and existing_card.audio_path:
-                app.logger.info(f"Using existing audio path: {existing_card.audio_path}")
-                audio_urls.append(url_for('static', filename=existing_card.audio_path, _external=True))
-                continue
+                audio_path = os.path.join(app.static_folder, existing_card.audio_path)
+                if os.path.exists(audio_path):
+                    app.logger.info(f"Using existing audio file: {existing_card.audio_path}")
+                    audio_urls.append(url_for('static', filename=existing_card.audio_path, _external=True))
+                    continue
+                else:
+                    app.logger.info(f"Audio file not found, will generate: {existing_card.audio_path}")
 
             file_id = str(uuid.uuid4())
             file_name = f'output_{file_id}.mp3'
