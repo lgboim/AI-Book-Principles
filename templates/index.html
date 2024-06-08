@@ -367,7 +367,7 @@
                 }
 
                 const data = await response.json();
-                cardSections = data.sections;
+                cardSections = data.sections.filter(section => section.trim() !== ""); // Filter out empty sections
 
                 const cardContainer = document.getElementById('card-container');
                 cardContainer.innerHTML = ''; // Clear previous cards
@@ -396,6 +396,7 @@
 
         async function generateTTS(texts) {
             const apiKey = document.getElementById('api-key').value;
+            const language = document.getElementById('language-select').value; // Get the selected language
             showLoading();
             setFeedback('Generating audio...');
 
@@ -411,7 +412,7 @@
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${apiKey}`
                         },
-                        body: JSON.stringify({ texts: [text] })
+                        body: JSON.stringify({ texts: [text], language: language }) // Pass language
                     });
 
                     if (!response.ok) {
