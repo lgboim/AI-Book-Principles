@@ -29,10 +29,11 @@
             top: 0;
             z-index: 1000;
             width: 100%;
+            box-sizing: border-box;
         }
 
         .header h1 {
-            font-size: 2rem;
+            font-size: 1.5rem;
             margin: 0;
         }
 
@@ -59,6 +60,7 @@
             top: 50px;
             z-index: 999;
             width: 100%;
+            box-sizing: border-box;
         }
 
         .menu input, .menu select, .menu button {
@@ -100,12 +102,13 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             padding: 15px;
-            font-size: 1.2rem;
+            font-size: 1rem;
             width: 100%;
-            max-width: 100%;
+            max-width: 600px;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            box-sizing: border-box;
         }
 
         .card p, .card h2, .card h3 {
@@ -123,6 +126,7 @@
             background-color: #f8f9fa;
             z-index: 1000;
             width: 100%;
+            box-sizing: border-box;
             box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
         }
 
@@ -161,20 +165,20 @@
         }
 
         /* Mobile responsive styles */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .header h1 {
                 font-size: 1.5rem;
             }
             .header button {
-                font-size: 0.9rem;
+                font-size: 1rem;
             }
             .menu input, .menu select, .menu button {
-                font-size: 0.8rem;
+                font-size: 0.9rem;
                 padding: 8px;
             }
             .card {
                 font-size: 1rem;
-                padding: 8px;
+                padding: 10px;
             }
             .audio-container button {
                 font-size: 1rem;
@@ -185,21 +189,21 @@
             }
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
             .header h1 {
-                font-size: 1rem;
+                font-size: 1.2rem;
             }
             .header button {
                 font-size: 0.8rem;
                 padding: 6px;
             }
             .menu input, .menu select, .menu button {
-                font-size: 0.7rem;
+                font-size: 0.8rem;
                 padding: 6px;
             }
             .card {
                 font-size: 0.9rem;
-                padding: 6px;
+                padding: 8px;
             }
             .audio-container button {
                 font-size: 0.9rem;
@@ -207,6 +211,31 @@
             }
             .feedback {
                 font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1rem;
+            }
+            .header button {
+                font-size: 0.8rem;
+                padding: 4px;
+            }
+            .menu input, .menu select, .menu button {
+                font-size: 0.7rem;
+                padding: 4px;
+            }
+            .card {
+                font-size: 0.8rem;
+                padding: 6px;
+            }
+            .audio-container button {
+                font-size: 0.8rem;
+                padding: 4px 5px;
+            }
+            .feedback {
+                font-size: 0.8rem;
             }
         }
 
