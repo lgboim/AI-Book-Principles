@@ -510,15 +510,17 @@
             if (audioQueue.length === 0) {
                 setFeedback('Finished playing all audios.');
                 isPlaying = false;
-                waitingForAudioToFinish = false;  // Reset the flag
 
-                // Check if there is another principle to generate only after finishing the current audio
-                const principleList = document.getElementById('principle-list');
-                const nextPrincipleIndex = principleList.selectedIndex + 1;
-                if (!waitingForAudioToFinish && nextPrincipleIndex < principleList.options.length) {
-                    principleList.selectedIndex = nextPrincipleIndex;
+                // Only move to the next principle after all audio has finished
+                if (!waitingForAudioToFinish) {
                     waitingForAudioToFinish = true;  // Set the flag to true
-                    generateCard();
+                    const principleList = document.getElementById('principle-list');
+                    const nextPrincipleIndex = principleList.selectedIndex + 1;
+                    if (nextPrincipleIndex < principleList.options.length) {
+                        principleList.selectedIndex = nextPrincipleIndex;
+                        generateCard();
+                    }
+                    waitingForAudioToFinish = false;  // Reset the flag after generating the card
                 }
                 return;
             }
