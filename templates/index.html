@@ -36,6 +36,7 @@
         .header h1 {
             font-size: 1.5rem;
             margin: 0;
+            flex: 1;
         }
 
         .header button {
@@ -46,6 +47,7 @@
             color: white;
             border-radius: 5px;
             cursor: pointer;
+            margin-left: 10px;
         }
 
         .header button:hover {
@@ -220,24 +222,53 @@
                 font-size: 1.5rem;  /* Increased font size */
             }
             .header button {
-                font-size: 1.2rem;  /* Increased font size */
-                padding: 12px;  /* Increased padding */
+                font-size: 1rem;  /* Increased font size */
+                padding: 8px;  /* Reduced padding for better fit */
+                width: auto;  /* Ensure button width auto adjusts */
             }
             .menu input, .menu select, .menu button {
-                font-size: 1.2rem;  /* Increased font size */
-                padding: 12px;  /* Increased padding for better touch targets */
+                font-size: 1rem;  /* Adjusted font size */
+                padding: 10px;  /* Adjusted padding for better touch targets */
+                width: calc(100% - 20px);  /* Ensure full width with some padding */
+                margin: 5px auto;  /* Center the elements */
             }
             .card {
-                font-size: 1.4rem;  /* Increased font size */
-                padding: 12px;  /* Increased padding */
+                font-size: 1.2rem;  /* Increased font size */
+                padding: 10px;  /* Increased padding */
+                width: calc(100% - 20px);  /* Ensure full width with some padding */
             }
             .audio-container button {
-                font-size: 1.4rem;  /* Increased font size */
-                padding: 12px;  /* Increased padding */
+                font-size: 1.2rem;  /* Increased font size */
+                padding: 10px;  /* Increased padding */
             }
             .feedback {
-                font-size: 1.4rem;  /* Increased font size */
+                font-size: 1.2rem;  /* Increased font size */
             }
+        }
+
+        .button-modern {
+            background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(9,121,113,1) 50%, rgba(0,212,255,1) 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .button-modern:hover {
+            background: linear-gradient(90deg, rgba(0,212,255,1) 0%, rgba(9,121,113,1) 50%, rgba(2,0,36,1) 100%);
+        }
+
+        input, select, button {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+        }
+
+        .card {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
         }
 
     </style>
