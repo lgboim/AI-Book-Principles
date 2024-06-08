@@ -442,9 +442,10 @@
                 setFeedback('Finished playing all audios.');
                 isPlaying = false;
                 // Check if there is another principle to generate
-                const nextPrinciple = document.getElementById('principle-list').options[document.getElementById('principle-list').selectedIndex + 1];
-                if (nextPrinciple) {
-                    document.getElementById('principle-list').selectedIndex++;
+                const principleList = document.getElementById('principle-list');
+                const nextPrincipleIndex = principleList.selectedIndex + 1;
+                if (nextPrincipleIndex < principleList.options.length) {
+                    principleList.selectedIndex = nextPrincipleIndex;
                     generateCard();
                 }
                 return;
@@ -465,6 +466,7 @@
                 playNextAudio();
             };
         }
+
 
         function pauseAudio() {
             audioPlayer.pause();
