@@ -290,6 +290,7 @@
         let audioUrls = [];
         let isPlaying = false;
         let audioQueue = [];
+        let waitingForAudioToFinish = false;  // New flag to indicate if we are waiting for audio to finish
         const audioPlayer = document.getElementById('audio-player');
 
         function toggleMenu() {
@@ -508,13 +509,15 @@
             if (audioQueue.length === 0) {
                 setFeedback('Finished playing all audios.');
                 isPlaying = false;
+                waitingForAudioToFinish = false;  // Reset the flag
 
                 // Check if there is another principle to generate only after finishing the current audio
                 const principleList = document.getElementById('principle-list');
                 const nextPrincipleIndex = principleList.selectedIndex + 1;
-                if (nextPrincipleIndex < principleList.options.length) {
+                if (!waitingForAudioToFinish && nextPrincipleIndex < principleList.options.length) {
                     principleList.selectedIndex = nextPrincipleIndex;
-                    setTimeout(() => generateCard(), 500); // Add a slight delay before generating the next card
+                    waitingForAudioToFinish = true;  // Set the flag to true
+                    generateCard();
                 }
                 return;
             }
