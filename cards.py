@@ -198,8 +198,10 @@ def tts():
 
         except Exception as e:
             app.logger.error(f"Error generating TTS for text: {text} - {str(e)}")
+            return jsonify({"error": str(e)}), 500
 
     return jsonify({"urls": audio_urls})
+
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
