@@ -544,10 +544,10 @@
 
                     const data = await response.json();
                     if (data.urls && data.urls.length > 0) {
-                        audioUrls.push(data.urls[0]); // Use only the first URL for each text
-                        audioQueue.push(data.urls[0]);
+                        audioUrls[i] = data.urls[0];
+                        audioQueue[i] = data.urls[0]; // Maintain the same index for proper synchronization
 
-                        if (!isPlaying) {
+                        if (!isPlaying && i === 0) {
                             setFeedback('Audio is being played.');
                             playNextAudio();
                         }
@@ -584,18 +584,6 @@
             playNextAudio();
         }
 
-        function highlightCard(index) {
-            const cards = document.querySelectorAll('.card');
-            cards.forEach((card, idx) => {
-                if (idx === index) {
-                    card.classList.add('highlight');
-                    card.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' });
-                } else {
-                    card.classList.remove('highlight');
-                }
-            });
-        }
-
         function playNextAudio() {
             if (audioQueue.length === 0) {
                 setFeedback('Finished playing all audios.');
@@ -621,16 +609,27 @@
                 isPaused = false;
 
                 // Highlight and scroll to the current card when the audio starts playing
-                highlightCard(currentCardIndex);
+                const currentCard = document.querySelector(`.card:nth-child(${currentCardIndex + 1})`);
+                if (currentCard) {
+                    currentCard.classList.add('highlight');
+                    currentCard.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' });
+
+                    // Remove highlight from the previous card
+                    if (currentCardIndex > 0) {
+                        const previousCard = document.querySelector(`.card:nth-child(${currentCardIndex})`);
+                        if (previousCard) {
+                            previousCard.classList.remove('highlight');
+                        }
+                    }
+
+                    currentCardIndex++;
+                }
             }).catch(error => {
                 console.error('Error playing audio:', error);
                 setFeedback('Failed to play audio.');
             });
 
-            audioPlayer.onended = () => {
-                currentCardIndex++;
-                playNextAudio();
-            };
+            audioPlayer.onended = playNextAudio;
             audioPlayer.onpause = () => {
                 isPaused = true;
             };
@@ -668,7 +667,6 @@
             setFeedback('Audio playback stopped.');
             isGeneratingAudio = false;
         }
-
     </script>
 
 </body>
