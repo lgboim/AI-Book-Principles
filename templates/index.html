@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Books</title>
+    <title>AI Book Principles</title>
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&display=swap">
     <style>
@@ -25,19 +25,19 @@
             overflow-y: auto;
         }
         .sidebar h1 {
-            font-size: 1.8rem;
+            font-size: 2.5rem;
             margin-bottom: 20px;
             font-weight: 700;
         }
         .sidebar p {
-            font-size: 1rem;
+            font-size: 1.5rem;
             margin-bottom: 20px;
         }
         .sidebar input, .sidebar select, .sidebar button {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            font-size: 1rem;
+            padding: 20px;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
             border: none;
             border-radius: 5px;
             box-sizing: border-box;
@@ -67,7 +67,7 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             padding: 20px;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             width: 100%;
             max-width: 600px;
             display: flex;
@@ -78,12 +78,19 @@
             margin: 0;
         }
         .audio-container {
-            display: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
             margin-top: 20px;
+        }
+        .audio-container button {
+            font-size: 2rem;
+            padding: 10px 20px;
         }
         .feedback {
             margin-top: 10px;
-            font-size: 1rem;
+            font-size: 1.5rem;
             color: #007bff;
         }
         .loading {
@@ -107,21 +114,37 @@
                 padding: 10px;
             }
             .sidebar h1 {
-                font-size: 1.5rem;
+                font-size: 2rem;
             }
             .sidebar p {
-                font-size: 0.9rem;
+                font-size: 1.2rem;
+            }
+            .sidebar input, .sidebar select, .sidebar button {
+                font-size: 1.2rem;
+                padding: 15px;
+            }
+            .card {
+                font-size: 1.2rem;
+                padding: 15px;
+            }
+            .audio-container button {
+                font-size: 1.5rem;
+                padding: 10px 15px;
             }
         }
 
         @media (max-width: 480px) {
             .sidebar input, .sidebar select, .sidebar button {
-                font-size: 0.9rem;
-                padding: 8px;
+                font-size: 1rem;
+                padding: 10px;
             }
             .card {
                 font-size: 1rem;
-                padding: 15px;
+                padding: 10px;
+            }
+            .audio-container button {
+                font-size: 1.2rem;
+                padding: 10px 12px;
             }
         }
     </style>
@@ -145,7 +168,6 @@
         <select id="principle-list" onchange="generateCard()">
             <option value="">Choose a principle</option>
         </select>
-        <button onclick="generateTTS()">Read All Cards</button>
         <div id="loading" class="loading"></div>
         <div id="feedback" class="feedback"></div>
     </div>
@@ -155,6 +177,9 @@
     </div>
     
     <div class="audio-container">
+        <button onclick="pauseAudio()">Pause</button>
+        <button onclick="resumeAudio()">Resume</button>
+        <button onclick="stopAudio()">Stop</button>
         <audio id="audio-player" controls></audio>
     </div>
 
@@ -164,6 +189,8 @@
         let cardSections = [];
         let audioUrls = [];
         let isPlaying = false;
+        let audioQueue = [];
+        const audioPlayer = document.getElementById('audio-player');
 
         function showLoading() {
             document.getElementById('loading').style.display = 'block';
@@ -291,21 +318,18 @@
                 setFeedback('No valid card content generated.');
             } else {
                 setFeedback('Card generated.');
+                generateTTS(cardSections);
             }
         }
 
-        async function generateTTS() {
-            const cardContainer = document.getElementById('card-container');
-            const texts = Array.from(cardContainer.querySelectorAll('.card')).map(card => card.innerText.trim()).filter(text => text);
-
+        async function generateTTS(texts) {
             const apiKey = document.getElementById('api-key').value;
-
             showLoading();
             setFeedback('Generating audio...');
 
             for (let i = 0; i < texts.length; i++) {
                 const text = texts[i];
-                
+
                 const response = await fetch('/tts', {
                     method: 'POST',
                     headers: {
@@ -318,8 +342,9 @@
                 const data = await response.json();
                 if (data.urls && data.urls[0]) {
                     audioUrls.push(data.urls[0]);
+                    audioQueue.push(data.urls[0]);
                     if (!isPlaying) {
-                        playAudio();
+                        playNextAudio();
                     }
                 }
             }
@@ -328,20 +353,40 @@
             setFeedback('Audio is being played.');
         }
 
-        function playAudio() {
-            if (currentCardIndex >= audioUrls.length) {
+        function playNextAudio() {
+            if (audioQueue.length === 0) {
                 setFeedback('Finished playing all audios.');
                 isPlaying = false;
+                // Check if there is another principle to generate
+                const nextPrinciple = document.getElementById('principle-list').options[document.getElementById('principle-list').selectedIndex + 1];
+                if (nextPrinciple) {
+                    document.getElementById('principle-list').selectedIndex++;
+                    generateCard();
+                }
                 return;
             }
 
-            const audioPlayer = document.getElementById('audio-player');
-            audioPlayer.src = audioUrls[currentCardIndex];
+            const audioUrl = audioQueue.shift();
+            audioPlayer.src = audioUrl;
             audioPlayer.play();
-            currentCardIndex++;
             isPlaying = true;
 
-            audioPlayer.onended = playAudio;
+            audioPlayer.onended = playNextAudio;
+        }
+
+        function pauseAudio() {
+            audioPlayer.pause();
+        }
+
+        function resumeAudio() {
+            audioPlayer.play();
+        }
+
+        function stopAudio() {
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+            audioQueue = [];
+            setFeedback('Audio playback stopped.');
         }
     </script>
 </body>
