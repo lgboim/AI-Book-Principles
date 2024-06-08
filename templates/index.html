@@ -29,7 +29,7 @@
             z-index: 1000;
         }
         .header h1 {
-            font-size: 2.5rem;
+            font-size: 2rem;
             margin: 0;
         }
         .header button {
@@ -87,7 +87,7 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             padding: 20px;
-            font-size: 2rem;
+            font-size: 1.5rem;
             width: 100%;
             max-width: 600px;
             display: flex;
@@ -111,14 +111,13 @@
             box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
         }
         .audio-container button {
-            font-size: 2.5rem;
+            font-size: 2rem;
             padding: 10px 20px;
         }
         .feedback {
             margin-top: 10px;
-            font-size: 2rem;
+            font-size: 1.5rem;
             color: #007bff;
-            text-align: center;
         }
         .loading {
             display: none;
@@ -138,7 +137,7 @@
         /* Mobile responsive styles */
         @media (max-width: 768px) {
             .header h1 {
-                font-size: 2rem;
+                font-size: 1.5rem;
             }
             .header button {
                 font-size: 1.2rem;
@@ -148,21 +147,18 @@
                 padding: 10px;
             }
             .card {
-                font-size: 1.8rem;
+                font-size: 1.2rem;
                 padding: 15px;
             }
             .audio-container button {
-                font-size: 2rem;
+                font-size: 1.5rem;
                 padding: 10px 15px;
-            }
-            .feedback {
-                font-size: 1.8rem;
             }
         }
 
         @media (max-width: 480px) {
             .header h1 {
-                font-size: 1.5rem;
+                font-size: 1.2rem;
             }
             .header button {
                 font-size: 1rem;
@@ -173,15 +169,12 @@
                 padding: 8px;
             }
             .card {
-                font-size: 1.5rem;
+                font-size: 1rem;
                 padding: 10px;
             }
             .audio-container button {
-                font-size: 1.5rem;
+                font-size: 1.2rem;
                 padding: 8px 10px;
-            }
-            .feedback {
-                font-size: 1.5rem;
             }
         }
     </style>
@@ -202,13 +195,12 @@
             <option value="">Choose a principle</option>
         </select>
         <div id="loading" class="loading"></div>
+        <div id="feedback" class="feedback"></div>
     </div>
 
     <div class="main" id="card-container">
         <!-- Cards will be dynamically inserted here -->
     </div>
-
-    <div class="feedback" id="feedback"></div>
     
     <div class="audio-container">
         <button onclick="pauseAudio()">Pause</button>
@@ -413,24 +405,23 @@
             isPlaying = true;
 
             audioPlayer.onended = () => {
-                // Scroll to the next card when the current audio finishes
+                // Scroll to the top of the next card when the current audio finishes
                 const nextCard = document.querySelector(`.card:nth-child(${currentCardIndex + 2})`);
                 if (nextCard) {
-                    nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    nextCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     currentCardIndex++;
                 }
                 playNextAudio();
             };
         }
 
+
         function pauseAudio() {
             audioPlayer.pause();
-            setFeedback('Audio paused.');
         }
 
         function resumeAudio() {
             audioPlayer.play();
-            setFeedback('Audio resumed.');
         }
 
         function stopAudio() {
