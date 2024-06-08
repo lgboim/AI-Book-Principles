@@ -128,7 +128,7 @@ def generate():
         client = OpenAI(api_key=api_key)
 
         if language == 'he':
-            prompt = f"""צור כרטיס מידע מפורט ותמציתי עבור העקרון "{principle}" מתוך הספר "{book_title}". כלול חלקים: מידע מפתיע, מושג, תובנה מרכזית, קטליזטור חדשנות, תוכנית פעולה, ספר משחקים אמיתי, מלכודות נפוצות, סיכום מהיר, והצהרת השפעה. אל תקרא לזה בשמות הללו, השתמש בכותרות משמעותיות שמסכמות את הכרטיס. שים נקודה בסוף כותרות. וודא שכל כרטיס הוא עצמאי וברור, ומספק מספיק פרטים כדי שהקורא יוכל להבין וליישם את העקרון. וודא שאתה משתמש בעברית תקנית וברורה, והוסף ניקוד בכל מקום כדי שמי שלא מכיר עברית כראוי יוכל לעשות הקראה ברורה."""
+            prompt = f"""צור כרטיס מידע מפורט ותמציתי עבור העקרון "{principle}" מתוך הספר "{book_title}". כלול חלקים: מידע מפתיע, מושג, תובנה מרכזית, קטליזטור חדשנות, תוכנית פעולה, ספר משחקים אמיתי, מלכודות נפוצות, סיכום מהיר, והצהרת השפעה. אל תקרא לזה בשמות הללו, השתמש בכותרות משמעותיות שמסכמות את הכרטיס. שים נקודה בסוף כותרות. וודא שכל כרטיס הוא עצמאי וברור, ומספק מספיק פרטים כדי שהקורא יוכל להבין וליישם את העקרון. וודא שאתה משתמש בעברית תקנית וברורה, והוסף ניקוד בכל מקום שיכול להקרא בכמה דרכים, כדי שיוכלו לעשות הקראה ברורה."""
         else:
             prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. add Period at the end of titles. Not call it in this names, use meaningful titles that sum the card. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle. Generate in English."""
 
