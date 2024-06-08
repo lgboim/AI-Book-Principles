@@ -462,55 +462,53 @@
         }
 
         function preloadAndPlayAudio(url) {
-            const audio = new Audio();
+            // Preload the audio to address iOS's limitations on autoplay
+            const audio = new Audio(url);
             audio.preload = 'auto';
-            audio.src = url;
-
             audio.oncanplaythrough = () => {
-                // Workaround for iOS autoplay restrictions
+                // Load the audio into the global player and play it
                 audioPlayer.src = url;
                 audioPlayer.playbackRate = parseFloat(document.getElementById('speed-select').value);
-                audioPlayer.load(); // Ensure the audio is loaded
-                const playPromise = audioPlayer.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        isPlaying = true;
-                        isPaused = false;
-
-                        // Highlight and scroll to the current card when the audio starts playing
-                        highlightAndScrollToCard(currentCardIndex);
-
-                        audioPlayer.onended = () => {
-                            currentCardIndex++;
-                            if (currentCardIndex < cardSections.length) {
-                                playNextAudio();  // Continue to next card's audio if available
-                            } else {
-                                setFeedback('Finished playing all cards for the current principle.');
-                                isPlaying = false;
-                                isGeneratingAudio = false;
-                                // Check if there is a next principle
-                                checkAndMoveToNextPrinciple();
-                            }
-                        };
-                    }).catch(error => {
-                        console.error('Error playing audio:', error);
-                        setFeedback('Error playing audio, retrying...');
-                        retryPlayAudio(url);
-                    });
-                }
+                audioPlayer.load();  // Explicitly load the audio for iOS
+                tryPlayAudio();
             };
-
             audio.onerror = () => {
                 console.error('Failed to load audio:', url);
                 setFeedback('Failed to load audio, retrying...');
                 retryPlayAudio(url);
             };
         }
-
         function retryPlayAudio(url) {
-            setTimeout(() => {
-                preloadAndPlayAudio(url);
-            }, 1000);
+            setTimeout(() => preloadAndPlayAudio(url), 1000);
+        }
+        function handleAudioEnd() {
+            currentCardIndex++;
+            if (currentCardIndex < cardSections.length) {
+                playNextAudio();  // Continue to next card's audio if available
+            } else {
+                setFeedback('Finished playing all cards for the current principle.');
+                isPlaying = false;
+                isGeneratingAudio = false;
+                checkAndMoveToNextPrinciple();
+            }
+        }
+        function tryPlayAudio() {
+            audioPlayer.play().then(() => {
+                isPlaying = true;
+                isPaused = false;
+                highlightAndScrollToCard(currentCardIndex);
+                audioPlayer.onended = handleAudioEnd;
+            }).catch(error => {
+                // Likely an iOS issue, request user interaction
+                console.error('Error playing audio:', error);
+                setFeedback('Tap to play audio.');
+                // Attach a one-time event listener to play the audio
+                document.body.addEventListener('click', function playAudioAfterInteraction() {
+                    audioPlayer.play().then(() => {
+                        document.body.removeEventListener('click', playAudioAfterInteraction);
+                    });
+                });
+            });
         }
 
         function highlightAndScrollToCard(index) {
