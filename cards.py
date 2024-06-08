@@ -107,6 +107,7 @@ def generate():
     data = request.json
     book_title = data.get('book_title')
     principle = data.get('principle')
+    language = data.get('language', 'en')
     api_key = request.headers.get('Authorization')
 
     if not api_key:
@@ -115,7 +116,7 @@ def generate():
     api_key = api_key.split(' ')[1]
 
     try:
-        app.logger.info(f"Generating card for book: {book_title}, principle: {principle}")
+        app.logger.info(f"Generating card for book: {book_title}, principle: {principle}, language: {language}")
 
         existing_card = Card.query.filter_by(book_title=book_title, principle=principle).first()
         if existing_card and existing_card.content:
@@ -124,7 +125,10 @@ def generate():
 
         client = OpenAI(api_key=api_key)
 
-        prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. Not call it in this names, use meaninful titles. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle. don't create empty lines."""
+        if language == 'he':
+            prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. Not call it in this names, use meaninful titles. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle. Generate in Hebrew."""
+        else:
+            prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. Not call it in this names, use meaninful titles. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle. Generate in English."""
 
         response = client.chat.completions.create(
             model="gpt-4o",
