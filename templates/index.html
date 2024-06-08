@@ -448,6 +448,89 @@
             }
         }
 
+
+
+        function playNextAudio() {
+            if (audioQueue.length === 0) {
+                setFeedback('Finished playing all audios.');
+                isPlaying = false;
+                isGeneratingAudio = false;
+                checkAndMoveToNextPrinciple();
+                return;
+            }
+
+            const audioUrl = audioQueue.shift();
+            preloadAndPlayAudio(audioUrl);
+        }
+
+        function preloadAndPlayAudio(url) {
+            const audio = new Audio();
+            audio.preload = 'auto';
+            audio.src = url;
+
+            audio.oncanplaythrough = () => {
+                audioPlayer.src = url;
+                audioPlayer.playbackRate = parseFloat(document.getElementById('speed-select').value);
+                audioPlayer.play().then(() => {
+                    isPlaying = true;
+                    isPaused = false;
+
+                    // Highlight and scroll to the current card when the audio starts playing
+                    highlightAndScrollToCard(currentCardIndex);
+
+                    audioPlayer.onended = () => {
+                        currentCardIndex++;
+                        if (currentCardIndex < cardSections.length) {
+                            playNextAudio();  // Continue to next card's audio if available
+                        } else {
+                            setFeedback('Finished playing all cards for the current principle.');
+                            isPlaying = false;
+                            isGeneratingAudio = false;
+                            // Check if there is a next principle
+                            checkAndMoveToNextPrinciple();
+                        }
+                    };
+                }).catch(error => {
+                    console.error('Error playing audio:', error);
+                    setFeedback('Error playing audio, retrying...');
+                    retryPlayAudio(url);
+                });
+            };
+
+            audio.onerror = () => {
+                console.error('Failed to load audio:', url);
+                setFeedback('Failed to load audio, retrying...');
+                retryPlayAudio(url);
+            };
+        }
+
+        function retryPlayAudio(url) {
+            setTimeout(() => {
+                preloadAndPlayAudio(url);
+            }, 1000);
+        }
+
+        function highlightAndScrollToCard(index) {
+            const card = document.querySelector(`.card:nth-child(${index + 1})`);
+            if (card) {
+                document.querySelectorAll('.card.highlight').forEach(card => card.classList.remove('highlight'));
+                card.classList.add('highlight');
+                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function checkAndMoveToNextPrinciple() {
+            const principleList = document.getElementById('principle-list');
+            const nextPrincipleIndex = principleList.selectedIndex + 1;
+            if (nextPrincipleIndex < principleList.options.length) {
+                principleList.selectedIndex = nextPrincipleIndex;
+                setFeedback('Moving to the next principle...');
+                generateCard();
+            } else {
+                setFeedback('All cards and principles completed.');
+            }
+        }
+
         async function generateCard() {
             const apiKey = document.getElementById('api-key').value;
             const bookTitle = document.getElementById('book-list').value;
@@ -507,7 +590,7 @@
                     setFeedback('No valid card content generated.');
                 } else {
                     setFeedback('Card generated.');
-                    generateAndPlayTTS(cardSections);
+                    await generateAndPlayTTS(cardSections);
                 }
             } catch (error) {
                 setFeedback(`Failed to generate card: ${error.message}`);
@@ -565,87 +648,6 @@
             }
         }
 
-        function playNextAudio() {
-            if (audioQueue.length === 0) {
-                setFeedback('Finished playing all audios.');
-                isPlaying = false;
-                isGeneratingAudio = false;
-                checkAndMoveToNextPrinciple();
-                return;
-            }
-
-            const audioUrl = audioQueue.shift();
-            preloadAndPlayAudio(audioUrl);
-        }
-
-        function preloadAndPlayAudio(url) {
-            const audio = new Audio();
-            audio.preload = 'auto';
-            audio.src = url;
-
-            audio.oncanplaythrough = () => {
-                audioPlayer.src = url;
-                audioPlayer.playbackRate = parseFloat(document.getElementById('speed-select').value);
-                audioPlayer.play().then(() => {
-                    isPlaying = true;
-                    isPaused = false;
-
-                    // Highlight and scroll to the current card when the audio starts playing
-                    highlightAndScrollToCard(currentCardIndex);
-                    currentCardIndex++;
-
-                    audioPlayer.onended = () => {
-                        if (currentCardIndex < cardSections.length) {
-                            playNextAudio();  // Continue to next card's audio if available
-                        } else {
-                            setFeedback('Finished playing all cards for the current principle.');
-                            isPlaying = false;
-                            isGeneratingAudio = false;
-                            // Check if there is a next principle
-                            checkAndMoveToNextPrinciple();
-                        }
-                    };
-                }).catch(error => {
-                    console.error('Error playing audio:', error);
-                    setFeedback('Error playing audio, retrying...');
-                    retryPlayAudio(url);
-                });
-            };
-
-            audio.onerror = () => {
-                console.error('Failed to load audio:', url);
-                setFeedback('Failed to load audio, retrying...');
-                retryPlayAudio(url);
-            };
-        }
-
-        function retryPlayAudio(url) {
-            setTimeout(() => {
-                preloadAndPlayAudio(url);
-            }, 1000);
-        }
-
-        function highlightAndScrollToCard(index) {
-            const card = document.querySelector(`.card:nth-child(${index + 1})`);
-            if (card) {
-                document.querySelectorAll('.card.highlight').forEach(card => card.classList.remove('highlight'));
-                card.classList.add('highlight');
-                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }
-
-        function checkAndMoveToNextPrinciple() {
-            const principleList = document.getElementById('principle-list');
-            const nextPrincipleIndex = principleList.selectedIndex + 1;
-            if (nextPrincipleIndex < principleList.options.length) {
-                principleList.selectedIndex = nextPrincipleIndex;
-                setFeedback('Moving to the next principle...');
-                generateCard();
-            } else {
-                setFeedback('All cards and principles completed.');
-            }
-        }
-
         function playFromCardIndex(index) {
             if (index < 0 || index >= audioUrls.length) return;
 
@@ -689,4 +691,3 @@
 
 </body>
 </html>
-
