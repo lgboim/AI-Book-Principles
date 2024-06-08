@@ -45,7 +45,7 @@ def suggest_books():
 
     client = OpenAI(api_key=api_key)
 
-    prompt = f"Suggest a list of books on the subject '{subject}'. Provide just the titles in a comma-separated list."
+    prompt = f"Suggest a list of books on the subject '{subject}'. Provide just the titles in a comma-separated list. No quotation marks or numbers."
 
     try:
         response = client.chat.completions.create(
@@ -124,7 +124,7 @@ def generate():
 
         client = OpenAI(api_key=api_key)
 
-        prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle."""
+        prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. Not call it in this names, use meaninful titles. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle. don't create empty lines."""
 
         response = client.chat.completions.create(
             model="gpt-4o",
