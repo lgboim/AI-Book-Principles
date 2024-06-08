@@ -144,8 +144,6 @@ def generate():
         app.logger.error(f"Error generating card: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-
-
 @app.route('/tts', methods=['POST'])
 def tts():
     data = request.json
