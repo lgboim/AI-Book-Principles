@@ -570,16 +570,8 @@
             audioPlayer.src = audioUrl;
             audioPlayer.playbackRate = parseFloat(document.getElementById('speed-select').value); // Set playback rate based on speed selection
             audioPlayer.play().then(() => {
-                audioPlayer.onended = () => {
-                    playNextAudio();
-                };
-                audioPlayer.onpause = () => {
-                    isPaused = true;
-                };
-                audioPlayer.onplay = () => {
-                    isPaused = false;
-                };
                 isPlaying = true;
+                isPaused = false;
 
                 // Scroll to the card when the audio starts playing
                 const nextCard = document.querySelector(`.card:nth-child(${currentCardIndex + 2})`);
@@ -591,6 +583,16 @@
                 console.error('Error playing audio:', error);
                 setFeedback('Failed to play audio.');
             });
+
+            audioPlayer.onended = () => {
+                playNextAudio();
+            };
+            audioPlayer.onpause = () => {
+                isPaused = true;
+            };
+            audioPlayer.onplay = () => {
+                isPaused = false;
+            };
         }
 
         function pauseAudio() {
