@@ -388,6 +388,7 @@
                 const cardContainer = document.getElementById('card-container');
                 cardContainer.innerHTML = ''; // Clear previous cards
 
+                // Iterate over card sections to display and read them one by one
                 for (const section of cardSections) {
                     const card = document.createElement('div');
                     card.classList.add('card');
@@ -396,7 +397,12 @@
                     }
                     card.innerHTML = marked.parse(section);
                     cardContainer.appendChild(card);
-                    await generateAndPlayTTS([section]); // Generate and play TTS for each section immediately
+
+                    // Scroll to the newly added card
+                    card.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' });
+
+                    // Generate and play TTS for each section immediately
+                    await generateAndPlayTTS([section]);
                 }
 
                 if (cardContainer.innerHTML === '') {
