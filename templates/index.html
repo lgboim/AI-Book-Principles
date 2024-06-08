@@ -379,13 +379,7 @@
                 cardContainer.innerHTML = ''; // Clear previous cards
 
                 for (const section of cardSections) {
-                    const card = document.createElement('div');
-                    card.classList.add('card');
-                    if (language === 'he') {
-                        card.classList.add('rtl');
-                    }
-                    card.innerHTML = marked.parse(section);
-                    cardContainer.appendChild(card);
+                    displayCard(section, language); // Display each card immediately
                     await generateTTS([section]); // Generate TTS for each section immediately
                 }
 
@@ -399,6 +393,17 @@
             } finally {
                 hideLoading();
             }
+        }
+
+        function displayCard(section, language) {
+            const cardContainer = document.getElementById('card-container');
+            const card = document.createElement('div');
+            card.classList.add('card');
+            if (language === 'he') {
+                card.classList.add('rtl');
+            }
+            card.innerHTML = marked.parse(section);
+            cardContainer.appendChild(card);
         }
 
         async function generateTTS(texts) {
@@ -474,7 +479,6 @@
             };
         }
 
-
         function pauseAudio() {
             audioPlayer.pause();
             setFeedback('Audio paused.');
@@ -491,6 +495,7 @@
             audioQueue = [];
             setFeedback('Audio playback stopped.');
         }
+
     </script>
 
 </body>
