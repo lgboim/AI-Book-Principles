@@ -1,94 +1,138 @@
-# Book principles generator
+# AI Book Principles
 
-A Flask web application to generate and read knowledge cards about books and their principles using OpenAI's API. This application helps users explore book recommendations, select principles, and generate detailed knowledge cards that can be read aloud.
+AI Book Principles is a web application designed to generate detailed knowledge cards based on principles from books. The application uses OpenAI's API to generate content and convert it into audio format for easy consumption. This project aims to provide a comprehensive learning experience by summarizing key book principles and offering voice narration.
 
 ## Features
 
-- Fetch book suggestions based on a given subject.
-- Select principles from a chosen book.
-- Generate detailed knowledge cards for the selected principles.
-- Read generated knowledge cards using text-to-speech.
-
-## Prerequisites
-
-- Python 3.8 or higher
-- An OpenAI API key
+- Generate detailed knowledge cards from book principles.
+- Convert generated content into audio format.
+- Responsive and modern UI design.
+- Supports both English and Hebrew languages.
+- Adjustable audio playback speed.
+- Easy-to-navigate interface with a settings menu.
 
 ## Getting Started
 
+### Prerequisites
+
+Before you begin, ensure you have met the following requirements:
+
+- Python 3.7 or later
+- Node.js and npm (for frontend dependencies)
+- An OpenAI API key
+
 ### Installation
 
-1. **Clone the repository**:
-    ```sh
-    git clone https://github.com/your-username/AI-Book-Principles.git
-    cd knowledge-card-generator
+1. **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/ai-book-principles.git
+    cd ai-book-principles
     ```
 
-2. **Create and activate a virtual environment**:
-    ```sh
+2. **Create and activate a virtual environment:**
+    ```bash
     python -m venv venv
-    source venv/bin/activate  # On Linux/Mac
-    venv\Scripts\activate  # On Windows
+    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
     ```
 
-3. **Install the required packages**:
-    ```sh
+3. **Install backend dependencies:**
+    ```bash
     pip install -r requirements.txt
     ```
 
-4. **Set up your OpenAI API key**:
-   Replace `your-api-key` with your actual OpenAI API key.
-    ```sh
-    export OPENAI_API_KEY=your-api-key  # On Linux/Mac
-    set OPENAI_API_KEY=your-api-key  # On Windows
+4. **Install frontend dependencies:**
+    ```bash
+    npm install
+    ```
+
+5. **Set up the database:**
+    ```bash
+    flask db init
+    flask db migrate -m "Initial migration."
+    flask db upgrade
+    ```
+
+6. **Set up environment variables:**
+    Create a `.env` file in the root directory and add your OpenAI API key:
+    ```env
+    OPENAI_API_KEY=your_openai_api_key
+    DATABASE_URL=sqlite:///local_database.db
+    ```
+
+7. **Run the application:**
+    ```bash
+    flask run
     ```
 
 ### Usage
 
-1. **Run the Flask application**:
-    ```sh
-    python cards.py
-    ```
+1. **Access the application:**
+    Open your web browser and navigate to `http://localhost:5000`.
 
-2. **Open your web browser and navigate to**:
-    ```
-    http://127.0.0.1:5000/
-    ```
+2. **Enter your OpenAI API key:**
+    Provide your OpenAI API key to enable the application to generate content.
 
-3. **Use the application**:
-    - Enter your OpenAI API key.
+3. **Generate knowledge cards:**
     - Enter a subject to get book suggestions.
-    - Select a book and then select a principle.
-    - Generate and read the cards.
+    - Choose a book and select a principle to generate a knowledge card.
+    - Listen to the generated content using the built-in audio player.
 
-### Deployment
+### Project Structure
 
-To deploy this application on Heroku, follow these steps:
+```
+ai-book-principles/
+├── static/
+│   ├── css/
+│   └── js/
+├── templates/
+│   └── index.html
+├── migrations/
+├── models.py
+├── app.py
+├── requirements.txt
+└── README.md
+```
 
-1. **Login to Heroku**:
-    ```sh
-    heroku login
+### Contributing
+
+To contribute to this project, follow these steps:
+
+1. **Fork the repository:**
+    Click the "Fork" button at the top right corner of the repository page.
+
+2. **Clone your fork:**
+    ```bash
+    git clone https://github.com/your-username/ai-book-principles.git
+    cd ai-book-principles
     ```
 
-2. **Create a new Heroku app**:
-    ```sh
-    heroku create your-app-name
+3. **Create a branch:**
+    ```bash
+    git checkout -b feature-branch
     ```
 
-3. **Deploy the application**:
-    ```sh
-    git push heroku master
+4. **Make your changes and commit them:**
+    ```bash
+    git commit -m "Add some feature"
     ```
 
-4. **Set your OpenAI API key on Heroku**:
-    ```sh
-    heroku config:set OPENAI_API_KEY=your-api-key
+5. **Push to your fork:**
+    ```bash
+    git push origin feature-branch
     ```
 
-5. **Open your Heroku app**:
-    ```sh
-    heroku open
-    ```
+6. **Create a pull request:**
+    Open your fork on GitHub and click the "New pull request" button.
 
-### File Structure
+### License
 
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+### Acknowledgements
+
+- [OpenAI](https://www.openai.com/) for providing the API to generate content and convert it into audio.
+- [FontAwesome](https://fontawesome.com/) for the icons used in the project.
+
+### Contact
+
+If you have any questions or suggestions, feel free to open an issue or contact the repository owner.
