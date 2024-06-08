@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, url_for
 from openai import OpenAI
 import os
 import uuid
@@ -147,14 +147,13 @@ def generate():
 @app.route('/tts', methods=['POST'])
 def tts():
     data = request.json
-    texts = data.get('texts', [])  # Expecting a list of texts to process
-    language = data.get('language', 'en')  # Get the language from the request
+    texts = data.get('texts', [])
+    language = data.get('language', 'en')
     api_key = request.headers.get('Authorization')
 
     if not api_key:
         return jsonify({"error": "API key is missing"}), 400
 
-    # Extract the actual API key from the "Bearer <api_key>" format
     api_key = api_key.split(' ')[1]
 
     client = OpenAI(api_key=api_key)
@@ -163,16 +162,17 @@ def tts():
     for text in texts:
         if not text.strip():
             app.logger.info("Skipping empty text.")
-            continue  # Skip empty text
+            continue
 
         try:
-            existing_card = Card.query.filter_by(content=text, language=language).first()  # Include language in query
+            existing_card = Card.query.filter_by(content=text, language=language).first()
             if existing_card and existing_card.audio_path:
-                audio_urls.append(existing_card.audio_path)
+                audio_urls.append(url_for('static', filename=existing_card.audio_path, _external=True))
                 continue
 
             file_id = str(uuid.uuid4())
-            file_path = os.path.join('static', f'output_{file_id}.mp3')
+            file_name = f'output_{file_id}.mp3'
+            file_path = os.path.join(app.static_folder, file_name)
 
             response = client.audio.speech.create(
                 model="tts-1",
@@ -180,27 +180,26 @@ def tts():
                 input=text,
             )
 
-            if not os.path.exists('static'):
-                os.makedirs('static')
+            if not os.path.exists(app.static_folder):
+                os.makedirs(app.static_folder)
 
             with open(file_path, 'wb') as audio_file:
                 audio_file.write(response.content)
 
             if existing_card:
-                existing_card.audio_path = file_path
+                existing_card.audio_path = file_name
                 db.session.commit()
             else:
-                new_card = Card(book_title="Unknown", principle="Unknown", content=text, language=language, audio_path=file_path)  # Include language
+                new_card = Card(book_title="Unknown", principle="Unknown", content=text, language=language, audio_path=file_name)
                 db.session.add(new_card)
                 db.session.commit()
 
-            audio_urls.append(file_path)
+            audio_urls.append(url_for('static', filename=file_name, _external=True))
 
         except Exception as e:
             app.logger.error(f"Error generating TTS for text: {text} - {str(e)}")
 
     return jsonify({"urls": audio_urls})
-
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
