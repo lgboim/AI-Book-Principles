@@ -130,18 +130,20 @@ def generate():
 
         card_sections = [section for section in card_content.split("\n\n") if section.strip()]
 
-        if existing_card:
-            existing_card.content = "\n\n".join(card_sections)
-        else:
-            new_card = Card(book_title=book_title, principle=principle, content="\n\n".join(card_sections), language=language)
-            db.session.add(new_card)
-        db.session.commit()
+        if card_sections:
+            if existing_card:
+                existing_card.content = "\n\n".join(card_sections)
+            else:
+                new_card = Card(book_title=book_title, principle=principle, content="\n\n".join(card_sections), language=language)
+                db.session.add(new_card)
+            db.session.commit()
 
         return jsonify({"sections": card_sections})
 
     except Exception as e:
         app.logger.error(f"Error generating card: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
 
 
 @app.route('/tts', methods=['POST'])
