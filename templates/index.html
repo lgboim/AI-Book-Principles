@@ -287,15 +287,15 @@
             const apiKey = document.getElementById('api-key').value;
             const bookTitle = document.getElementById('book-list').value;
             const language = document.getElementById('language-select').value;
-
+        
             if (!bookTitle) {
                 setFeedback('Please choose a book.');
                 return;
             }
-
+        
             showLoading();
             setFeedback('Fetching principles...');
-
+        
             const response = await fetch('/suggest_principles', {
                 method: 'POST',
                 headers: {
@@ -304,68 +304,69 @@
                 },
                 body: JSON.stringify({ book_title: bookTitle, language: language })  // Pass language
             });
-
+        
             hideLoading();
             const data = await response.json();
             const principleList = document.getElementById('principle-list');
             principleList.innerHTML = '<option value="">Choose a principle</option>'; // Set default option
-
+        
             data.principles.forEach(principle => {
                 const option = document.createElement('option');
                 option.value = principle;
                 option.textContent = principle;
                 principleList.appendChild(option);
             });
-
+        
             setFeedback('Principles loaded. Please choose a principle.');
         }
 
-        async function generateCard() {
-            const apiKey = document.getElementById('api-key').value;
-            const bookTitle = document.getElementById('book-list').value;
-            const principle = document.getElementById('principle-list').value;
-            const language = document.getElementById('language-select').value;
+async function generateCard() {
+    const apiKey = document.getElementById('api-key').value;
+    const bookTitle = document.getElementById('book-list').value;
+    const principle = document.getElementById('principle-list').value;
+    const language = document.getElementById('language-select').value;
 
-            if (!bookTitle || !principle) {
-                setFeedback('Please choose a book and a principle.');
-                return;
-            }
+    if (!bookTitle || !principle) {
+        setFeedback('Please choose a book and a principle.');
+        return;
+    }
 
-            showLoading();
-            setFeedback('Generating card...');
+    showLoading();
+    setFeedback('Generating card...');
 
-            const response = await fetch('/generate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({ book_title: bookTitle, principle: principle, language: language })  // Pass language
-            });
+    const response = await fetch('/generate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({ book_title: bookTitle, principle: principle, language: language })  // Pass language
+    });
 
-            hideLoading();
-            const data = await response.json();
-            cardSections = data.sections;
+    hideLoading();
+    const data = await response.json();
+    cardSections = data.sections;
 
-            const cardContainer = document.getElementById('card-container');
-            cardContainer.innerHTML = ''; // Clear previous cards
+    const cardContainer = document.getElementById('card-container');
+    cardContainer.innerHTML = ''; // Clear previous cards
 
-            cardSections.forEach((section, index) => {
-                if (section.trim()) {  // Ensure the section is not empty
-                    const card = document.createElement('div');
-                    card.classList.add('card');
-                    card.innerHTML = marked.parse(section);
-                    cardContainer.appendChild(card);
-                }
-            });
-
-            if (cardContainer.innerHTML === '') {
-                setFeedback('No valid card content generated.');
-            } else {
-                setFeedback('Card generated.');
-                generateTTS(cardSections);
-            }
+    cardSections.forEach((section, index) => {
+        if (section.trim()) {  // Ensure the section is not empty
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.innerHTML = marked.parse(section);
+            cardContainer.appendChild(card);
         }
+    });
+
+    if (cardContainer.innerHTML === '') {
+        setFeedback('No valid card content generated.');
+    } else {
+        setFeedback('Card generated.');
+        generateTTS(cardSections);
+    }
+}
+
 
 
         async function generateTTS(texts) {
