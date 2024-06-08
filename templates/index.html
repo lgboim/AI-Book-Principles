@@ -286,6 +286,7 @@
         async function suggestPrinciples() {
             const apiKey = document.getElementById('api-key').value;
             const bookTitle = document.getElementById('book-list').value;
+            const language = document.getElementById('language-select').value;
 
             if (!bookTitle) {
                 setFeedback('Please choose a book.');
@@ -301,7 +302,7 @@
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${apiKey}`
                 },
-                body: JSON.stringify({ book_title: bookTitle })
+                body: JSON.stringify({ book_title: bookTitle, language: language })  // Pass language
             });
 
             hideLoading();
@@ -339,7 +340,7 @@
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${apiKey}`
                 },
-                body: JSON.stringify({ book_title: bookTitle, principle: principle, language: language })
+                body: JSON.stringify({ book_title: bookTitle, principle: principle, language: language })  // Pass language
             });
 
             hideLoading();
@@ -365,6 +366,7 @@
                 generateTTS(cardSections);
             }
         }
+
 
         async function generateTTS(texts) {
             const apiKey = document.getElementById('api-key').value;
