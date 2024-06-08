@@ -180,6 +180,9 @@ def tts():
                 input=text,
             )
 
+            if not os.path.exists('static'):
+                os.makedirs('static')
+
             with open(file_path, 'wb') as audio_file:
                 audio_file.write(response.content)
 
@@ -197,6 +200,7 @@ def tts():
             app.logger.error(f"Error generating TTS for text: {text} - {str(e)}")
 
     return jsonify({"urls": audio_urls})
+
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
