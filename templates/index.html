@@ -478,6 +478,7 @@
 
             const audioUrl = audioQueue.shift();
             audioPlayer.src = audioUrl;
+            audioPlayer.playbackRate = parseFloat(document.getElementById('speed-select').value); // Set playback rate based on speed selection
             audioPlayer.play();
             isPlaying = true;
 
