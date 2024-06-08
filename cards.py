@@ -173,7 +173,7 @@ def tts():
             file_id = str(uuid.uuid4())
             file_path = os.path.join('static', f'output_{file_id}.mp3')
 
-            response = client.audio_speech.create(
+            response = client.audio.speech.create(
                 model="tts-1",
                 voice="alloy",
                 input=text,
