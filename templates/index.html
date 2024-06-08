@@ -505,7 +505,7 @@
                     setFeedback('No valid card content generated.');
                 } else {
                     setFeedback('Card generated.');
-                    await generateAndPlayTTS(cardSections);
+                    generateAndPlayTTS(cardSections);
                 }
             } catch (error) {
                 setFeedback(`Failed to generate card: ${error.message}`);
@@ -525,7 +525,8 @@
             audioQueue = []; // Clear existing audio queue
 
             try {
-                for (const text of texts) {
+                for (let i = 0; i < texts.length; i++) {
+                    const text = texts[i];
                     if (!text.trim()) continue; // Skip empty text sections
 
                     const response = await fetch('/tts', {
@@ -545,6 +546,11 @@
                     if (data.urls && data.urls.length > 0) {
                         audioUrls.push(data.urls[0]); // Use only the first URL for each text
                         audioQueue.push(data.urls[0]);
+
+                        if (!isPlaying) {
+                            setFeedback('Audio is being played.');
+                            playNextAudio();
+                        }
                     }
                 }
 
@@ -560,9 +566,6 @@
                         principleList.selectedIndex = nextPrincipleIndex;
                         generateCard();
                     }
-                } else {
-                    setFeedback('Audio is being played.');
-                    playNextAudio();
                 }
             } catch (error) {
                 setFeedback(`Failed to generate audio: ${error.message}`);
