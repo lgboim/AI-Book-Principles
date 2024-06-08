@@ -495,6 +495,7 @@
                         card.classList.add('rtl');
                     }
                     card.innerHTML = marked.parse(section);
+                    card.addEventListener('click', () => playFromCardIndex(cardSections.indexOf(section))); // Add click event listener to each card
                     cardContainer.appendChild(card);
                 }
 
@@ -569,6 +570,14 @@
             }
         }
 
+        function playFromCardIndex(index) {
+            if (index < 0 || index >= audioUrls.length) return;
+
+            currentCardIndex = index;
+            audioQueue = audioUrls.slice(index); // Set audio queue starting from the clicked card
+            isPlaying = false;
+            playNextAudio();
+        }
 
         function playNextAudio() {
             if (audioQueue.length === 0) {
@@ -623,6 +632,7 @@
                 isPaused = false;
             };
         }
+
 
         function pauseAudio() {
             if (isPlaying && !isPaused) {
