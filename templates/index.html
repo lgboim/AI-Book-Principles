@@ -448,6 +448,13 @@
             if (audioQueue.length === 0) {
                 setFeedback('Finished playing all audios.');
                 isPlaying = false;
+                // Check if there is another principle to generate
+                const principleList = document.getElementById('principle-list');
+                const nextPrincipleIndex = principleList.selectedIndex + 1;
+                if (nextPrincipleIndex < principleList.options.length) {
+                    principleList.selectedIndex = nextPrincipleIndex;
+                    generateCard();
+                }
                 return;
             }
 
@@ -466,6 +473,7 @@
                 playNextAudio();
             };
         }
+
 
         function pauseAudio() {
             audioPlayer.pause();
