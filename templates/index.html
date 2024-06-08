@@ -378,23 +378,21 @@
                 const cardContainer = document.getElementById('card-container');
                 cardContainer.innerHTML = ''; // Clear previous cards
 
-                cardSections.forEach((section, index) => {
-                    if (section.trim()) {  // Ensure the section is not empty
-                        const card = document.createElement('div');
-                        card.classList.add('card');
-                        if (language === 'he') {
-                            card.classList.add('rtl');
-                        }
-                        card.innerHTML = marked.parse(section);
-                        cardContainer.appendChild(card);
+                for (const section of cardSections) {
+                    const card = document.createElement('div');
+                    card.classList.add('card');
+                    if (language === 'he') {
+                        card.classList.add('rtl');
                     }
-                });
+                    card.innerHTML = marked.parse(section);
+                    cardContainer.appendChild(card);
+                    await generateTTS([section]); // Generate TTS for each section immediately
+                }
 
                 if (cardContainer.innerHTML === '') {
                     setFeedback('No valid card content generated.');
                 } else {
                     setFeedback('Card generated.');
-                    generateTTS(cardSections);
                 }
             } catch (error) {
                 setFeedback(`Failed to generate card: ${error.message}`);
@@ -450,13 +448,6 @@
             if (audioQueue.length === 0) {
                 setFeedback('Finished playing all audios.');
                 isPlaying = false;
-                // Check if there is another principle to generate
-                const principleList = document.getElementById('principle-list');
-                const nextPrincipleIndex = principleList.selectedIndex + 1;
-                if (nextPrincipleIndex < principleList.options.length) {
-                    principleList.selectedIndex = nextPrincipleIndex;
-                    generateCard();
-                }
                 return;
             }
 
