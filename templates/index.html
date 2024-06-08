@@ -379,8 +379,14 @@
                 cardContainer.innerHTML = ''; // Clear previous cards
 
                 for (const section of cardSections) {
-                    displayCard(section, language); // Display each card immediately
-                    await generateTTS([section]); // Generate TTS for each section immediately
+                    const card = document.createElement('div');
+                    card.classList.add('card');
+                    if (language === 'he') {
+                        card.classList.add('rtl');
+                    }
+                    card.innerHTML = marked.parse(section);
+                    cardContainer.appendChild(card);
+                    await generateAndPlayTTS([section]); // Generate and play TTS for each section immediately
                 }
 
                 if (cardContainer.innerHTML === '') {
@@ -395,18 +401,7 @@
             }
         }
 
-        function displayCard(section, language) {
-            const cardContainer = document.getElementById('card-container');
-            const card = document.createElement('div');
-            card.classList.add('card');
-            if (language === 'he') {
-                card.classList.add('rtl');
-            }
-            card.innerHTML = marked.parse(section);
-            cardContainer.appendChild(card);
-        }
-
-        async function generateTTS(texts) {
+        async function generateAndPlayTTS(texts) {
             const apiKey = document.getElementById('api-key').value;
             const language = document.getElementById('language-select').value; // Get the selected language
             showLoading();
@@ -453,6 +448,7 @@
             if (audioQueue.length === 0) {
                 setFeedback('Finished playing all audios.');
                 isPlaying = false;
+
                 // Check if there is another principle to generate
                 const principleList = document.getElementById('principle-list');
                 const nextPrincipleIndex = principleList.selectedIndex + 1;
@@ -495,6 +491,7 @@
             audioQueue = [];
             setFeedback('Audio playback stopped.');
         }
+
 
     </script>
 
