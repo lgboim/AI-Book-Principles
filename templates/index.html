@@ -471,30 +471,33 @@
                 audioPlayer.src = url;
                 audioPlayer.playbackRate = parseFloat(document.getElementById('speed-select').value);
                 audioPlayer.load(); // Ensure the audio is loaded
-                audioPlayer.play().then(() => {
-                    isPlaying = true;
-                    isPaused = false;
+                const playPromise = audioPlayer.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        isPlaying = true;
+                        isPaused = false;
 
-                    // Highlight and scroll to the current card when the audio starts playing
-                    highlightAndScrollToCard(currentCardIndex);
+                        // Highlight and scroll to the current card when the audio starts playing
+                        highlightAndScrollToCard(currentCardIndex);
 
-                    audioPlayer.onended = () => {
-                        currentCardIndex++;
-                        if (currentCardIndex < cardSections.length) {
-                            playNextAudio();  // Continue to next card's audio if available
-                        } else {
-                            setFeedback('Finished playing all cards for the current principle.');
-                            isPlaying = false;
-                            isGeneratingAudio = false;
-                            // Check if there is a next principle
-                            checkAndMoveToNextPrinciple();
-                        }
-                    };
-                }).catch(error => {
-                    console.error('Error playing audio:', error);
-                    setFeedback('Error playing audio, retrying...');
-                    retryPlayAudio(url);
-                });
+                        audioPlayer.onended = () => {
+                            currentCardIndex++;
+                            if (currentCardIndex < cardSections.length) {
+                                playNextAudio();  // Continue to next card's audio if available
+                            } else {
+                                setFeedback('Finished playing all cards for the current principle.');
+                                isPlaying = false;
+                                isGeneratingAudio = false;
+                                // Check if there is a next principle
+                                checkAndMoveToNextPrinciple();
+                            }
+                        };
+                    }).catch(error => {
+                        console.error('Error playing audio:', error);
+                        setFeedback('Error playing audio, retrying...');
+                        retryPlayAudio(url);
+                    });
+                }
             };
 
             audio.onerror = () => {
