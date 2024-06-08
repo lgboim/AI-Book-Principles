@@ -415,9 +415,6 @@
                     card.innerHTML = marked.parse(section);
                     cardContainer.appendChild(card);
 
-                    // Scroll to the newly added card
-                    card.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' });
-
                     // Generate and play TTS for each section immediately
                     await generateAndPlayTTS([section]);
                 }
@@ -499,13 +496,14 @@
             audioPlayer.play();
             isPlaying = true;
 
+            // Scroll to the card when the audio starts playing
+            const nextCard = document.querySelector(`.card:nth-child(${currentCardIndex + 2})`);
+            if (nextCard) {
+                nextCard.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' });
+                currentCardIndex++;
+            }
+
             audioPlayer.onended = () => {
-                // Scroll to the top of the next card when the current audio finishes
-                const nextCard = document.querySelector(`.card:nth-child(${currentCardIndex + 2})`);
-                if (nextCard) {
-                    nextCard.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' });
-                    currentCardIndex++;
-                }
                 playNextAudio();
             };
         }
