@@ -348,6 +348,8 @@
             for (let i = 0; i < texts.length; i++) {
                 const text = texts[i];
 
+                if (!text.trim()) continue; // Skip empty text sections
+
                 const response = await fetch('/tts', {
                     method: 'POST',
                     headers: {
