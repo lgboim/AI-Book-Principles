@@ -45,7 +45,7 @@ def suggest_books():
 
     client = OpenAI(api_key=api_key)
 
-    prompt = f"Suggest a list of books on the subject '{subject}'. Provide just the titles in a comma-separated list. No quotation marks or numbers."
+    prompt = f"Suggest a list of books on the subject '{subject}'. Provide just the titles in a comma-separated list."
 
     try:
         response = client.chat.completions.create(
@@ -200,7 +200,6 @@ def tts():
             app.logger.error(f"Error generating TTS for text: {text} - {str(e)}")
 
     return jsonify({"urls": audio_urls})
-
 
 
 if __name__ == "__main__":
