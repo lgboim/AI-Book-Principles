@@ -453,7 +453,6 @@
                 setFeedback('Finished playing all audios.');
                 isPlaying = false;
                 isGeneratingAudio = false;
-                checkAndMoveToNextPrinciple();
                 return;
             }
 
@@ -462,36 +461,23 @@
         }
 
         function preloadAndPlayAudio(url) {
-            // Preload the audio to address iOS's limitations on autoplay
             const audio = new Audio(url);
             audio.preload = 'auto';
+
             audio.oncanplaythrough = () => {
-                // Load the audio into the global player and play it
                 audioPlayer.src = url;
                 audioPlayer.playbackRate = parseFloat(document.getElementById('speed-select').value);
                 audioPlayer.load();  // Explicitly load the audio for iOS
                 tryPlayAudio();
             };
+
             audio.onerror = () => {
                 console.error('Failed to load audio:', url);
                 setFeedback('Failed to load audio, retrying...');
                 retryPlayAudio(url);
             };
         }
-        function retryPlayAudio(url) {
-            setTimeout(() => preloadAndPlayAudio(url), 1000);
-        }
-        function handleAudioEnd() {
-            currentCardIndex++;
-            if (currentCardIndex < cardSections.length) {
-                playNextAudio();  // Continue to next card's audio if available
-            } else {
-                setFeedback('Finished playing all cards for the current principle.');
-                isPlaying = false;
-                isGeneratingAudio = false;
-                checkAndMoveToNextPrinciple();
-            }
-        }
+
         function tryPlayAudio() {
             audioPlayer.play().then(() => {
                 isPlaying = true;
@@ -506,9 +492,27 @@
                 document.body.addEventListener('click', function playAudioAfterInteraction() {
                     audioPlayer.play().then(() => {
                         document.body.removeEventListener('click', playAudioAfterInteraction);
+                        highlightAndScrollToCard(currentCardIndex); // Ensure the card is highlighted after playback starts
+                    }).catch(playbackError => {
+                        console.error('Error playing audio after user interaction:', playbackError);
                     });
                 });
             });
+        }
+
+        function handleAudioEnd() {
+            currentCardIndex++;
+            if (currentCardIndex < cardSections.length) {
+                playNextAudio();  // Continue to next card's audio if available
+            } else {
+                setFeedback('Finished playing all cards for the current principle.');
+                isPlaying = false;
+                isGeneratingAudio = false;
+            }
+        }
+
+        function retryPlayAudio(url) {
+            setTimeout(() => preloadAndPlayAudio(url), 1000);
         }
 
         function highlightAndScrollToCard(index) {
@@ -517,18 +521,6 @@
                 document.querySelectorAll('.card.highlight').forEach(card => card.classList.remove('highlight'));
                 card.classList.add('highlight');
                 card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }
-
-        function checkAndMoveToNextPrinciple() {
-            const principleList = document.getElementById('principle-list');
-            const nextPrincipleIndex = principleList.selectedIndex + 1;
-            if (nextPrincipleIndex < principleList.options.length) {
-                principleList.selectedIndex = nextPrincipleIndex;
-                setFeedback('Moving to the next principle...');
-                generateCard();
-            } else {
-                setFeedback('All cards and principles completed.');
             }
         }
 
@@ -591,7 +583,7 @@
                     setFeedback('No valid card content generated.');
                 } else {
                     setFeedback('Card generated.');
-                    await generateAndPlayTTS(cardSections);
+                    generateAndPlayTTS(cardSections);
                 }
             } catch (error) {
                 setFeedback(`Failed to generate card: ${error.message}`);
@@ -600,6 +592,44 @@
             }
         }
 
+        function playFromCardIndex(index) {
+            if (index < 0 || index >= audioUrls.length) return;
+
+            currentCardIndex = index;
+            audioQueue = audioUrls.slice(index); // Set audio queue starting from the clicked card
+            isPlaying = false;
+            playNextAudio();
+        }
+
+        function pauseAudio() {
+            if (isPlaying && !isPaused) {
+                audioPlayer.pause();
+                isPaused = true;
+                setFeedback('Audio paused.');
+            }
+        }
+
+        function resumeAudio() {
+            if (isPaused) {
+                audioPlayer.play().then(() => {
+                    isPaused = false;
+                    setFeedback('Audio resumed.');
+                }).catch(error => {
+                    console.error('Error resuming audio:', error);
+                    setFeedback('Failed to resume audio.');
+                });
+            }
+        }
+
+        function stopAudio() {
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+            audioQueue = [];
+            isPaused = false;
+            isPlaying = false;
+            setFeedback('Audio playback stopped.');
+            isGeneratingAudio = false;
+        }
         async function generateAndPlayTTS(texts) {
             const apiKey = document.getElementById('api-key').value;
             const language = document.getElementById('language-select').value; // Get the selected language
@@ -648,46 +678,6 @@
                 hideLoading();
             }
         }
-
-        function playFromCardIndex(index) {
-            if (index < 0 || index >= audioUrls.length) return;
-
-            currentCardIndex = index;
-            audioQueue = audioUrls.slice(index); // Set audio queue starting from the clicked card
-            isPlaying = false;
-            playNextAudio();
-        }
-
-        function pauseAudio() {
-            if (isPlaying && !isPaused) {
-                audioPlayer.pause();
-                isPaused = true;
-                setFeedback('Audio paused.');
-            }
-        }
-
-        function resumeAudio() {
-            if (isPaused) {
-                audioPlayer.play().then(() => {
-                    isPaused = false;
-                    setFeedback('Audio resumed.');
-                }).catch(error => {
-                    console.error('Error resuming audio:', error);
-                    setFeedback('Failed to resume audio.');
-                });
-            }
-        }
-
-        function stopAudio() {
-            audioPlayer.pause();
-            audioPlayer.currentTime = 0;
-            audioQueue = [];
-            isPaused = false;
-            isPlaying = false;
-            setFeedback('Audio playback stopped.');
-            isGeneratingAudio = false;
-        }
-
     </script>
 
 </body>
