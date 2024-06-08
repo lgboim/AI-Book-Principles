@@ -31,6 +31,7 @@ class Card(db.Model):
         self.audio_path = audio_path
 
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
