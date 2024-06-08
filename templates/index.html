@@ -510,9 +510,7 @@
             setFeedback('Generating audio...');
 
             try {
-                for (let i = 0; i < texts.length; i++) {
-                    const text = texts[i];
-
+                for (const text of texts) {
                     if (!text.trim()) continue; // Skip empty text sections
 
                     const response = await fetch('/tts', {
@@ -529,9 +527,9 @@
                     }
 
                     const data = await response.json();
-                    if (data.urls && data.urls[0]) {
-                        audioUrls.push(data.urls[0]);
-                        audioQueue.push(data.urls[0]);
+                    if (data.urls && data.urls.length > 0) {
+                        audioUrls.push(...data.urls);
+                        audioQueue.push(...data.urls);
                         if (!isPlaying) {
                             playNextAudio();
                         }
@@ -545,6 +543,7 @@
                 hideLoading();
             }
         }
+
 
         function playNextAudio() {
             if (audioQueue.length === 0) {
