@@ -4,6 +4,7 @@ import os
 import uuid
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from models import db, Card  # Import the db instance and Card model from models.py
 
 app = Flask(__name__)
 
@@ -12,23 +13,8 @@ DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///local_database.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
+db.init_app(app)  # Initialize the db instance with the app
 migrate = Migrate(app, db)
-
-class Card(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    book_title = db.Column(db.String(200), nullable=False)
-    principle = db.Column(db.String(200), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    language = db.Column(db.String(10), nullable=False)
-    audio_path = db.Column(db.String(200), nullable=True)
-
-    def __init__(self, book_title, principle, content, language, audio_path=None):
-        self.book_title = book_title
-        self.principle = principle
-        self.content = content
-        self.language = language
-        self.audio_path = audio_path
 
 @app.route('/')
 def index():
@@ -158,6 +144,7 @@ def generate():
 def tts():
     data = request.json
     texts = data.get('texts', [])  # Expecting a list of texts to process
+    language = data.get('language', 'en')  # Get the language from the request
     api_key = request.headers.get('Authorization')
 
     if not api_key:
@@ -175,7 +162,7 @@ def tts():
             continue  # Skip empty text
 
         try:
-            existing_card = Card.query.filter_by(content=text).first()
+            existing_card = Card.query.filter_by(content=text, language=language).first()  # Include language in query
             if existing_card and existing_card.audio_path:
                 audio_urls.append(existing_card.audio_path)
                 continue
@@ -183,7 +170,7 @@ def tts():
             file_id = str(uuid.uuid4())
             file_path = os.path.join('static', f'output_{file_id}.mp3')
 
-            response = client.audio.speech.create(
+            response = client.audio_speech.create(
                 model="tts-1",
                 voice="alloy",
                 input=text,
@@ -196,7 +183,7 @@ def tts():
                 existing_card.audio_path = file_path
                 db.session.commit()
             else:
-                new_card = Card(book_title="Unknown", principle="Unknown", content=text, audio_path=file_path)
+                new_card = Card(book_title="Unknown", principle="Unknown", content=text, language=language, audio_path=file_path)  # Include language
                 db.session.add(new_card)
                 db.session.commit()
 
