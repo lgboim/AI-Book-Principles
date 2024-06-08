@@ -124,7 +124,10 @@ def generate():
             max_tokens=1000
         )
 
-        card_content = response.choices[0].message.content
+        card_content = response.choices[0].message.content.strip()
+        if not card_content:
+            return jsonify({"error": "Generated content is empty."}), 400
+
         card_sections = card_content.split("\n\n")
 
         if existing_card:
