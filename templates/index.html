@@ -509,12 +509,12 @@
                 setFeedback('Finished playing all audios.');
                 isPlaying = false;
 
-                // Check if there is another principle to generate
+                // Check if there is another principle to generate only after finishing the current audio
                 const principleList = document.getElementById('principle-list');
                 const nextPrincipleIndex = principleList.selectedIndex + 1;
                 if (nextPrincipleIndex < principleList.options.length) {
                     principleList.selectedIndex = nextPrincipleIndex;
-                    generateCard();
+                    setTimeout(() => generateCard(), 500); // Add a slight delay before generating the next card
                 }
                 return;
             }
