@@ -24,23 +24,25 @@ def index():
 def suggest_books():
     data = request.json
     subject = data.get('subject')
-    api_key = data.get('api_key')
+    api_key = request.headers.get('Authorization')
 
     if not api_key:
         return jsonify({"error": "API key is missing"}), 400
+
+    api_key = api_key.split(' ')[1]
 
     client = OpenAI(api_key=api_key)
 
     prompt = f"Suggest a list of books on the subject '{subject}'. Provide just the titles in a comma-separated list. Just the list, No quotation marks or numbers."
 
     try:
-        response = client.chat_completions.create(
+        response = client.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=100
         )
 
-        books = response.choices[0].message['content'].split(', ')
+        books = response.choices[0].message.content.split(', ')
         return jsonify({"books": books})
 
     except Exception as e:
@@ -50,10 +52,12 @@ def suggest_books():
 def suggest_principles():
     data = request.json
     book_title = data.get('book_title')
-    api_key = data.get('api_key')
+    api_key = request.headers.get('Authorization')
 
     if not api_key:
         return jsonify({"error": "API key is missing"}), 400
+
+    api_key = api_key.split(' ')[1]
 
     # Check if principles for the given book title already exist in the database
     existing_principles = db.session.query(Card.principle).filter_by(book_title=book_title).distinct().all()
@@ -67,13 +71,13 @@ def suggest_principles():
     prompt = f"Suggest a list of principles from the book '{book_title}'. Provide just the principles in a comma-separated list. Just the list, No quotation marks or numbers."
 
     try:
-        response = client.chat_completions.create(
+        response = client.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=100
         )
 
-        principles = response.choices[0].message['content'].split(', ')
+        principles = response.choices[0].message.content.split(', ')
 
         # Save principles to the database as placeholders
         for principle in principles:
@@ -92,10 +96,12 @@ def generate():
     book_title = data.get('book_title')
     principle = data.get('principle')
     language = data.get('language', 'en')
-    api_key = data.get('api_key')
+    api_key = request.headers.get('Authorization')
 
     if not api_key:
         return jsonify({"error": "API key is missing"}), 400
+
+    api_key = api_key.split(' ')[1]
 
     try:
         app.logger.info(f"Generating card for book: {book_title}, principle: {principle}, language: {language}")
@@ -110,15 +116,15 @@ def generate():
         if language == 'he':
             prompt = f"""צור כרטיס מידע מפורט ותמציתי עבור העקרון "{principle}" מתוך הספר "{book_title}". כלול חלקים: מידע מפתיע, מושג, תובנה מרכזית, קטליזטור חדשנות, תוכנית פעולה, ספר משחקים אמיתי, מלכודות נפוצות, סיכום מהיר, והצהרת השפעה. אל תקרא לזה בשמות הללו, השתמש בכותרות משמעותיות שמסכמות את הכרטיס. שים נקודה בסוף כותרות. וודא שכל כרטיס הוא עצמאי וברור, ומספק מספיק פרטים כדי שהקורא יוכל להבין וליישם את העקרון."""
         else:
-            prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. Add Period at the end of titles. Not call it in this names, use meaningful titles that sum the card. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle. Generate in English."""
+            prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. add Period at the end of titles. Not call it in this names, use meaningful titles that sum the card. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle. Generate in English."""
 
-        response = client.chat_completions.create(
+        response = client.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1000
         )
 
-        card_content = response.choices[0].message['content'].strip()
+        card_content = response.choices[0].message.content.strip()
         if not card_content:
             return jsonify({"error": "Generated content is empty."}), 400
 
@@ -143,10 +149,12 @@ def tts():
     data = request.json
     texts = data.get('texts', [])
     language = data.get('language', 'en')
-    api_key = data.get('api_key')
+    api_key = request.headers.get('Authorization')
 
     if not api_key:
         return jsonify({"error": "API key is missing"}), 400
+
+    api_key = api_key.split(' ')[1]
 
     client = OpenAI(api_key=api_key)
     audio_urls = []
@@ -166,7 +174,7 @@ def tts():
             file_name = f'output_{file_id}.mp3'
             file_path = os.path.join(app.static_folder, file_name)
 
-            response = client.audio_speech.create(
+            response = client.audio.speech.create(
                 model="tts-1",
                 voice="onyx",
                 input=text,
@@ -176,7 +184,7 @@ def tts():
                 os.makedirs(app.static_folder)
 
             with open(file_path, 'wb') as audio_file:
-                audio_file.write(response['data'])
+                audio_file.write(response.content)
 
             if existing_card:
                 existing_card.audio_path = file_name
