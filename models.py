@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+
 db = SQLAlchemy()
 
 class Card(db.Model):
@@ -6,10 +7,12 @@ class Card(db.Model):
     book_title = db.Column(db.String(200), nullable=False)
     principle = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
+    language = db.Column(db.String(10), nullable=False)
     audio_path = db.Column(db.String(200), nullable=True)
 
-    def __init__(self, book_title, principle, content, audio_path=None):
+    def __init__(self, book_title, principle, content, language, audio_path=None):
         self.book_title = book_title
         self.principle = principle
         self.content = content
+        self.language = language
         self.audio_path = audio_path
