@@ -27,6 +27,7 @@
             position: sticky;
             top: 0;
             z-index: 1000;
+            width: 100%;
         }
         .header h1 {
             font-size: 2.5rem;
@@ -52,6 +53,7 @@
             position: sticky;
             top: 50px;
             z-index: 999;
+            width: 100%;
         }
         .menu input, .menu select, .menu button {
             width: 100%;
@@ -80,6 +82,7 @@
             flex-direction: column;
             gap: 20px;
             align-items: center;
+            width: 100%;
         }
         .card {
             background: white;
@@ -203,6 +206,13 @@
         <select id="language-select">
             <option value="en">English</option>
             <option value="he">Hebrew</option>
+        </select>
+        <select id="speed-select">
+            <option value="1">Normal Speed</option>
+            <option value="1.25">1.25x Speed</option>
+            <option value="1.5">1.5x Speed</option>
+            <option value="1.75">1.75x Speed</option>
+            <option value="2">2x Speed</option>
         </select>
         <button onclick="suggestBooks()">Suggest Books</button>
         <select id="book-list" onchange="suggestPrinciples()">
@@ -404,6 +414,7 @@
         async function generateAndPlayTTS(texts) {
             const apiKey = document.getElementById('api-key').value;
             const language = document.getElementById('language-select').value; // Get the selected language
+            const speed = document.getElementById('speed-select').value; // Get the selected speed
             showLoading();
             setFeedback('Generating audio...');
 
@@ -419,7 +430,7 @@
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${apiKey}`
                         },
-                        body: JSON.stringify({ texts: [text], language: language }) // Pass language
+                        body: JSON.stringify({ texts: [text], language: language, speed: speed }) // Pass language and speed
                     });
 
                     if (!response.ok) {
@@ -491,8 +502,6 @@
             audioQueue = [];
             setFeedback('Audio playback stopped.');
         }
-
-
     </script>
 
 </body>
