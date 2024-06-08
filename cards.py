@@ -167,6 +167,7 @@ def tts():
         try:
             existing_card = Card.query.filter_by(content=text, language=language).first()
             if existing_card and existing_card.audio_path:
+                app.logger.info(f"Using existing audio path: {existing_card.audio_path}")
                 audio_urls.append(url_for('static', filename=existing_card.audio_path, _external=True))
                 continue
 
@@ -183,8 +184,10 @@ def tts():
             if not os.path.exists(app.static_folder):
                 os.makedirs(app.static_folder)
 
+            app.logger.info(f"Saving audio file to path: {file_path}")
             with open(file_path, 'wb') as audio_file:
                 audio_file.write(response.content)
+            app.logger.info(f"Audio file saved: {file_name}")
 
             if existing_card:
                 existing_card.audio_path = file_name
@@ -194,6 +197,7 @@ def tts():
                 db.session.add(new_card)
                 db.session.commit()
 
+            app.logger.info(f"Generated audio path: {file_name}")
             audio_urls.append(url_for('static', filename=file_name, _external=True))
 
         except Exception as e:
