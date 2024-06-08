@@ -33,7 +33,7 @@ def suggest_books():
 
     client = OpenAI(api_key=api_key)
 
-    prompt = f"Suggest a list of books on the subject '{subject}'. Provide just the titles in a comma-separated list. No quotation marks or numbers."
+    prompt = f"Suggest a list of books on the subject '{subject}'. Provide just the titles in a comma-separated list. Just the list, No quotation marks or numbers."
 
     try:
         response = client.chat.completions.create(
