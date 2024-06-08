@@ -323,6 +323,7 @@
         <button class="icon-button" onclick="stopAudio()"><i class="fas fa-stop"></i></button>
         <audio id="audio-player" controls></audio>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         let currentCardIndex = 0;
@@ -602,14 +603,6 @@
             isPaused = false;
             setFeedback('Audio playback stopped.');
         }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const startButton = document.createElement('button');
-            startButton.innerText = 'Start';
-            startButton.classList.add('button-modern');
-            startButton.addEventListener('click', generateCard);
-            document.body.appendChild(startButton);
-        });
 
     </script>
 
