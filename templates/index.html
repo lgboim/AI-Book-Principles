@@ -17,6 +17,7 @@
             height: 100vh;
             width: 100vw;
         }
+
         .header {
             background-color: #343a40;
             color: white;
@@ -29,82 +30,93 @@
             z-index: 1000;
             width: 100%;
         }
+
         .header h1 {
-            font-size: 2.5rem;
+            font-size: 2rem;
             margin: 0;
         }
+
         .header button {
-            font-size: 1.5rem;
-            padding: 10px;
+            font-size: 1.2rem;
+            padding: 8px;
             background-color: #007bff;
             border: none;
             color: white;
             border-radius: 5px;
             cursor: pointer;
         }
+
         .header button:hover {
             background-color: #0056b3;
         }
+
         .menu {
             display: none;
             flex-direction: column;
             background-color: #343a40;
-            padding: 20px;
+            padding: 15px;
             position: sticky;
             top: 50px;
             z-index: 999;
             width: 100%;
         }
+
         .menu input, .menu select, .menu button {
             width: 100%;
-            padding: 15px;
+            padding: 12px;
             margin-bottom: 10px;
-            font-size: 1.2rem;
+            font-size: 1rem;
             border: none;
             border-radius: 5px;
             box-sizing: border-box;
         }
+
         .menu button {
             background-color: #007bff;
             color: white;
             cursor: pointer;
             font-weight: 500;
         }
+
         .menu button:hover {
             background-color: #0056b3;
         }
+
         .main {
             flex-grow: 1;
-            padding: 20px;
+            padding: 10px;
             box-sizing: border-box;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 10px;
             align-items: center;
             width: 100%;
         }
+
         .card {
             background: white;
             border: 1px solid #ddd;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            font-size: 2rem;
+            padding: 15px;
+            font-size: 1.5rem;
             width: 100%;
             max-width: 600px;
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
+
         .card p, .card h2, .card h3 {
             margin: 0;
         }
+
         .audio-container {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 20px;
+            gap: 10px;
             padding: 10px 0;
             position: sticky;
             bottom: 0;
@@ -113,16 +125,19 @@
             width: 100%;
             box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
         }
+
         .audio-container button {
-            font-size: 2.5rem;
-            padding: 10px 20px;
+            font-size: 1.8rem;
+            padding: 8px 12px;
         }
+
         .feedback {
             margin-top: 10px;
-            font-size: 2rem;
+            font-size: 1.5rem;
             color: #007bff;
             text-align: center;
         }
+
         .loading {
             display: none;
             border: 4px solid #f3f3f3;
@@ -133,6 +148,7 @@
             animation: spin 2s linear infinite;
             margin: 10px auto;
         }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -143,46 +159,21 @@
             direction: rtl;
             text-align: right;
         }
-        
+
         /* Mobile responsive styles */
         @media (max-width: 768px) {
             .header h1 {
-                font-size: 2rem;
-            }
-            .header button {
-                font-size: 1.2rem;
-            }
-            .menu input, .menu select, .menu button {
-                font-size: 1rem;
-                padding: 10px;
-            }
-            .card {
-                font-size: 1.8rem;
-                padding: 15px;
-            }
-            .audio-container button {
-                font-size: 2rem;
-                padding: 10px 15px;
-            }
-            .feedback {
-                font-size: 1.8rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .header h1 {
                 font-size: 1.5rem;
             }
             .header button {
                 font-size: 1rem;
-                padding: 8px;
             }
             .menu input, .menu select, .menu button {
                 font-size: 0.9rem;
-                padding: 8px;
+                padding: 10px;
             }
             .card {
-                font-size: 1.5rem;
+                font-size: 1.2rem;
                 padding: 10px;
             }
             .audio-container button {
@@ -190,9 +181,35 @@
                 padding: 8px 10px;
             }
             .feedback {
-                font-size: 1.5rem;
+                font-size: 1.2rem;
             }
         }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.2rem;
+            }
+            .header button {
+                font-size: 0.8rem;
+                padding: 6px;
+            }
+            .menu input, .menu select, .menu button {
+                font-size: 0.8rem;
+                padding: 8px;
+            }
+            .card {
+                font-size: 1rem;
+                padding: 8px;
+            }
+            .audio-container button {
+                font-size: 1.2rem;
+                padding: 6px 8px;
+            }
+            .feedback {
+                font-size: 1rem;
+            }
+        }
+
     </style>
 </head>
 <body>
