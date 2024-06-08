@@ -20,13 +20,16 @@ class Card(db.Model):
     book_title = db.Column(db.String(200), nullable=False)
     principle = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
+    language = db.Column(db.String(10), nullable=False)  # Add this line
     audio_path = db.Column(db.String(200), nullable=True)
 
-    def __init__(self, book_title, principle, content, audio_path=None):
+    def __init__(self, book_title, principle, content, language, audio_path=None):
         self.book_title = book_title
         self.principle = principle
         self.content = content
+        self.language = language  # Add this line
         self.audio_path = audio_path
+
 
 @app.route('/')
 def index():
@@ -118,7 +121,7 @@ def generate():
     try:
         app.logger.info(f"Generating card for book: {book_title}, principle: {principle}, language: {language}")
 
-        existing_card = Card.query.filter_by(book_title=book_title, principle=principle).first()
+        existing_card = Card.query.filter_by(book_title=book_title, principle=principle, language=language).first()
         if existing_card and existing_card.content:
             app.logger.info("Card found in database, returning existing card.")
             return jsonify({"sections": existing_card.content.split("\n\n")})
@@ -126,9 +129,9 @@ def generate():
         client = OpenAI(api_key=api_key)
 
         if language == 'he':
-            prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. Not call it in this names, use meaninful titles. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle. Generate in Hebrew."""
+            prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. Not call it in this names, use meaningful titles. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle. Generate in Hebrew."""
         else:
-            prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. Not call it in this names, use meaninful titles. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle. Generate in English."""
+            prompt = f"""Generate a detailed and concise knowledge card for the principle "{principle}" from the book "{book_title}". Include sections: Surprising Info, Concept, Key Insight, Innovation Catalyst, Action Plan, Real-World Playbook, Common Pitfalls, Quick Recap, and Impact Statement. Not call it in this names, use meaningful titles. Ensure each card is self-contained and clear, providing enough detail for a reader to understand and apply the principle. Generate in English."""
 
         response = client.chat.completions.create(
             model="gpt-4o",
@@ -142,7 +145,7 @@ def generate():
         if existing_card:
             existing_card.content = card_content
         else:
-            new_card = Card(book_title=book_title, principle=principle, content=card_content)
+            new_card = Card(book_title=book_title, principle=principle, content=card_content, language=language)
             db.session.add(new_card)
         db.session.commit()
 
@@ -151,6 +154,7 @@ def generate():
     except Exception as e:
         app.logger.error(f"Error generating card: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/tts', methods=['POST'])
 def tts():
