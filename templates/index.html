@@ -16,6 +16,7 @@
             flex-direction: column;
             height: 100vh;
             width: 100vw;
+            box-sizing: border-box;  /* Ensure everything is sized relative to this box */
         }
 
         .header {
@@ -65,7 +66,7 @@
 
         .menu input, .menu select, .menu button {
             width: 100%;
-            padding: 10px;
+            padding: 12px;  /* Increased padding for better touch targets */
             margin-bottom: 10px;
             font-size: 1rem;
             border: none;
@@ -102,7 +103,7 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             padding: 15px;
-            font-size: 1.3rem;
+            font-size: 1.3rem;  /* Increased font size */
             width: 100%;
             max-width: 600px;
             display: flex;
@@ -173,16 +174,16 @@
                 font-size: 1rem;
             }
             .menu input, .menu select, .menu button {
-                font-size: 0.9rem;
-                padding: 8px;
+                font-size: 1rem;
+                padding: 12px;  /* Increased padding for better touch targets */
             }
             .card {
-                font-size: 1rem;
-                padding: 10px;
+                font-size: 1.2rem;
+                padding: 12px;  /* Increased padding */
             }
             .audio-container button {
                 font-size: 1rem;
-                padding: 6px 8px;
+                padding: 10px;  /* Increased padding */
             }
             .feedback {
                 font-size: 1rem;
@@ -191,51 +192,51 @@
 
         @media (max-width: 768px) {
             .header h1 {
-                font-size: 1.2rem;
+                font-size: 1.5rem;  /* Increased font size */
             }
             .header button {
-                font-size: 0.8rem;
-                padding: 6px;
+                font-size: 1rem;
+                padding: 10px;  /* Increased padding */
             }
             .menu input, .menu select, .menu button {
-                font-size: 0.8rem;
-                padding: 6px;
+                font-size: 1rem;
+                padding: 12px;  /* Increased padding for better touch targets */
             }
             .card {
-                font-size: 0.9rem;
-                padding: 8px;
+                font-size: 1.3rem;
+                padding: 12px;  /* Increased padding */
             }
             .audio-container button {
-                font-size: 0.9rem;
-                padding: 5px 6px;
+                font-size: 1.2rem;  /* Increased font size */
+                padding: 12px;  /* Increased padding */
             }
             .feedback {
-                font-size: 0.9rem;
+                font-size: 1.2rem;  /* Increased font size */
             }
         }
 
         @media (max-width: 480px) {
             .header h1 {
-                font-size: 1rem;
+                font-size: 1.5rem;  /* Increased font size */
             }
             .header button {
-                font-size: 0.8rem;
-                padding: 4px;
+                font-size: 1.2rem;  /* Increased font size */
+                padding: 12px;  /* Increased padding */
             }
             .menu input, .menu select, .menu button {
-                font-size: 0.7rem;
-                padding: 4px;
+                font-size: 1.2rem;  /* Increased font size */
+                padding: 12px;  /* Increased padding for better touch targets */
             }
             .card {
-                font-size: 0.8rem;
-                padding: 6px;
+                font-size: 1.4rem;  /* Increased font size */
+                padding: 12px;  /* Increased padding */
             }
             .audio-container button {
-                font-size: 0.8rem;
-                padding: 4px 5px;
+                font-size: 1.4rem;  /* Increased font size */
+                padding: 12px;  /* Increased padding */
             }
             .feedback {
-                font-size: 0.8rem;
+                font-size: 1.4rem;  /* Increased font size */
             }
         }
 
