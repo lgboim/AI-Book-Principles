@@ -175,7 +175,7 @@ def tts():
 
             response = client.audio.speech.create(
                 model="tts-1",
-                voice="alloy",
+                voice="onyx",
                 input=text,
             )
 
