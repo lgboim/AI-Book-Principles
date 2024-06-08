@@ -10,45 +10,58 @@
         body {
             font-family: 'Playfair Display', serif;
             background-color: #f8f9fa;
+            margin: 0;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             height: 100vh;
-            margin: 0;
-            overflow: hidden;
         }
-        .sidebar {
-            width: 100%;
+        .header {
             background-color: #343a40;
             color: white;
-            padding: 20px;
-            box-sizing: border-box;
-            overflow-y: auto;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .sidebar h1 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            font-weight: 700;
+        .header h1 {
+            font-size: 2rem;
+            margin: 0;
         }
-        .sidebar p {
+        .header button {
             font-size: 1.5rem;
-            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
         }
-        .sidebar input, .sidebar select, .sidebar button {
+        .header button:hover {
+            background-color: #0056b3;
+        }
+        .menu {
+            display: none;
+            flex-direction: column;
+            background-color: #343a40;
+            padding: 20px;
+        }
+        .menu input, .menu select, .menu button {
             width: 100%;
-            padding: 20px;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
+            padding: 15px;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
             border: none;
             border-radius: 5px;
             box-sizing: border-box;
         }
-        .sidebar button {
+        .menu button {
             background-color: #007bff;
             color: white;
             cursor: pointer;
             font-weight: 500;
         }
-        .sidebar button:hover {
+        .menu button:hover {
             background-color: #0056b3;
         }
         .main {
@@ -110,18 +123,15 @@
         
         /* Mobile responsive styles */
         @media (max-width: 768px) {
-            .sidebar {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .header button {
+                font-size: 1.2rem;
+            }
+            .menu input, .menu select, .menu button {
+                font-size: 1rem;
                 padding: 10px;
-            }
-            .sidebar h1 {
-                font-size: 2rem;
-            }
-            .sidebar p {
-                font-size: 1.2rem;
-            }
-            .sidebar input, .sidebar select, .sidebar button {
-                font-size: 1.2rem;
-                padding: 15px;
             }
             .card {
                 font-size: 1.2rem;
@@ -134,9 +144,16 @@
         }
 
         @media (max-width: 480px) {
-            .sidebar input, .sidebar select, .sidebar button {
+            .header h1 {
+                font-size: 1.2rem;
+            }
+            .header button {
                 font-size: 1rem;
-                padding: 10px;
+                padding: 8px;
+            }
+            .menu input, .menu select, .menu button {
+                font-size: 0.9rem;
+                padding: 8px;
             }
             .card {
                 font-size: 1rem;
@@ -144,21 +161,17 @@
             }
             .audio-container button {
                 font-size: 1.2rem;
-                padding: 10px 12px;
+                padding: 8px 10px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="sidebar">
+    <div class="header">
         <h1>AI Book Principles</h1>
-        <p>Use this tool to generate knowledge cards about books and their principles. Follow these steps:</p>
-        <ol>
-            <li>Enter your API key.</li>
-            <li>Enter a subject to get book suggestions.</li>
-            <li>Select a book and then select a principle.</li>
-            <li>Generate and read the cards.</li>
-        </ol>
+        <button onclick="toggleMenu()">Menu</button>
+    </div>
+    <div class="menu">
         <input type="password" id="api-key" placeholder="Enter your API Key">
         <input type="text" id="subject" placeholder="Enter the Subject">
         <button onclick="suggestBooks()">Suggest Books</button>
@@ -191,6 +204,11 @@
         let isPlaying = false;
         let audioQueue = [];
         const audioPlayer = document.getElementById('audio-player');
+
+        function toggleMenu() {
+            const menu = document.querySelector('.menu');
+            menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'flex' : 'none';
+        }
 
         function showLoading() {
             document.getElementById('loading').style.display = 'block';
