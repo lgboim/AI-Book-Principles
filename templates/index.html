@@ -134,6 +134,12 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* RTL for Hebrew */
+        .rtl {
+            direction: rtl;
+            text-align: right;
+        }
         
         /* Mobile responsive styles */
         @media (max-width: 768px) {
@@ -376,6 +382,9 @@
                     if (section.trim()) {  // Ensure the section is not empty
                         const card = document.createElement('div');
                         card.classList.add('card');
+                        if (language === 'he') {
+                            card.classList.add('rtl');
+                        }
                         card.innerHTML = marked.parse(section);
                         cardContainer.appendChild(card);
                     }
@@ -460,13 +469,12 @@
                 // Scroll to the top of the next card when the current audio finishes
                 const nextCard = document.querySelector(`.card:nth-child(${currentCardIndex + 2})`);
                 if (nextCard) {
-                    nextCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    nextCard.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' });
                     currentCardIndex++;
                 }
                 playNextAudio();
             };
         }
-
 
         function pauseAudio() {
             audioPlayer.pause();
