@@ -184,7 +184,8 @@ def tts():
                 audio_path = os.path.join(app.static_folder, existing_card.audio_path)
                 if os.path.exists(audio_path):
                     app.logger.info(f"Using existing audio file: {existing_card.audio_path}")
-                    audio_urls.append(url_for('static', filename=existing_card.audio_path, _external=True))
+                    scheme = 'https' if request.is_secure else 'http'
+                    audio_urls.append(f"{scheme}://{request.host}/static/{existing_card.audio_path}")
                     continue
                 else:
                     app.logger.info(f"Audio file not found, will generate: {existing_card.audio_path}")
@@ -216,7 +217,8 @@ def tts():
                 db.session.commit()
 
             app.logger.info(f"Generated audio path: {file_name}")
-            audio_urls.append(url_for('static', filename=file_name, _external=True))
+            scheme = 'https' if request.is_secure else 'http'
+            audio_urls.append(f"{scheme}://{request.host}/static/{file_name}")
 
         except Exception as e:
             app.logger.error(f"Error generating TTS for text: {text} - {str(e)}")
