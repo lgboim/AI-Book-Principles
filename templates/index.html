@@ -669,6 +669,8 @@
                 audioPlayer.src = url;
                 audioPlayer.playbackRate = parseFloat(document.getElementById('speed-select').value);
                 audioPlayer.load();
+
+                // Attempt to play the audio and catch the error for user interaction requirement
                 tryPlayAudio();
             };
 
@@ -678,22 +680,24 @@
         }
 
         function tryPlayAudio() {
-            audioPlayer.play().then(() => {
-                isPlaying = true;
-                isPaused = false;
-                highlightAndScrollToCard(currentCardIndex);
-                audioPlayer.onended = handleAudioEnd;
-            }).catch(error => {
-                // Handle play error due to iOS restrictions
-                setFeedback('Tap to play audio.');
-                document.body.addEventListener('click', playAudioAfterInteraction, { once: true });
-            });
+            const playPromise = audioPlayer.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    isPlaying = true;
+                    isPaused = false;
+                    highlightAndScrollToCard(currentCardIndex);
+                    audioPlayer.onended = handleAudioEnd;
+                }).catch(error => {
+                    // Handle play error due to iOS restrictions
+                    setFeedback('Tap to play audio.');
+                    document.body.addEventListener('click', playAudioAfterInteraction, { once: true });
+                });
+            }
         }
 
         function playAudioAfterInteraction() {
             audioPlayer.play().then(() => {
-                highlightAndScrollToCard(currentCardIndex);
-                document.body.removeEventListener('click', playAudioAfterInteraction);
+                highlightAndScrollToCard(currentCardIndex); // Ensure the card is highlighted after playback starts
             }).catch(playbackError => {
                 console.error('Error playing audio after user interaction:', playbackError);
             });
@@ -702,7 +706,7 @@
         function handleAudioEnd() {
             currentCardIndex++;
             if (currentCardIndex < cardSections.length) {
-                playNextAudio();
+                playNextAudio(); // Continue to next card's audio if available
             } else {
                 setFeedback('Finished playing all cards for the current principle.');
                 isPlaying = false;
