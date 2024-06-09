@@ -401,7 +401,8 @@
                 hideLoading();
             }
         }
-
+        stopAudio();
+        document.getElementById('card-container').innerHTML = '';
         async function suggestPrinciples() {
             const apiKey = document.getElementById('api-key').value;
             const bookTitle = document.getElementById('book-list').value;
@@ -411,6 +412,10 @@
                 setFeedback('Please choose a book.');
                 return;
             }
+
+            // Stop audio playback and clear audio queue
+            stopAudio();
+            audioQueue = [];
 
             showLoading();
             setFeedback('Fetching principles...');
@@ -422,7 +427,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${apiKey}`
                     },
-                    body: JSON.stringify({ book_title: bookTitle, language: language })  // Pass language
+                    body: JSON.stringify({ book_title: bookTitle, language: language })
                 });
 
                 if (!response.ok) {
@@ -448,6 +453,8 @@
             }
         }
 
+
+
         function playNextAudio() {
             if (audioQueue.length === 0) {
                 setFeedback('Finished playing all audios.');
@@ -458,7 +465,11 @@
 
             const audioUrl = audioQueue.shift();
             preloadAndPlayAudio(audioUrl);
+
+            // Highlight the corresponding text section
+            highlightAndScrollToCard(currentCardIndex);
         }
+
 
         function preloadAndPlayAudio(url) {
             const audio = new Audio(url);
@@ -476,15 +487,7 @@
                 setFeedback('Failed to load audio, retrying...');
                 retryPlayAudio(url);
             };
-        }
-
-        function tryPlayAudio() {
-            audioPlayer.play().then(() => {
-                isPlaying = true;
-                isPaused = false;
-                highlightAndScrollToCard(currentCardIndex);
-                audioPlayer.onended = handleAudioEnd;
-            }).catch(error => {
+            audioPlayer.play().catch(error => {
                 // Likely an iOS issue, request user interaction
                 console.error('Error playing audio:', error);
                 setFeedback('Tap to play audio.');
@@ -498,7 +501,32 @@
                     });
                 });
             });
+
         }
+
+        function tryPlayAudio() {
+            console.log('Trying to play audio for card index:', currentCardIndex);
+            audioPlayer.play().then(() => {
+                console.log('Audio started playing for card index:', currentCardIndex);
+                isPlaying = true;
+                isPaused = false;
+                highlightAndScrollToCard(currentCardIndex);
+                audioPlayer.onended = handleAudioEnd;
+            }).catch(error => {
+                console.error('Error playing audio:', error);
+                setFeedback('Tap to play audio.');
+                // Attach a one-time event listener to play the audio
+                document.body.addEventListener('click', function playAudioAfterInteraction() {
+                    audioPlayer.play().then(() => {
+                        document.body.removeEventListener('click', playAudioAfterInteraction);
+                        highlightAndScrollToCard(currentCardIndex); // Ensure the card is highlighted after playback starts
+                    }).catch(playbackError => {
+                        console.error('Error playing audio after user interaction:', playbackError);
+                    });
+                });
+            });
+        }
+
 
         function handleAudioEnd() {
             currentCardIndex++;
@@ -535,11 +563,21 @@
                 return;
             }
 
-            // Allow switching principles by the user
-            if (isGeneratingAudio) {
-                stopAudio();  // Stop current audio playback if user switches principles
-                setFeedback('Switching to the new principle...');
-            }
+            // Stop audio playback and clear audio queue
+            stopAudio();
+            audioQueue = [];
+
+            // Clear previous audio URLs and audio queue
+            audioUrls = [];
+            audioQueue = [];
+
+            // Reset currentCardIndex to 0 when generating a new principle
+            currentCardIndex = 0;
+
+            // Clear previous cards and remove highlighting
+            const cardContainer = document.getElementById('card-container');
+            cardContainer.innerHTML = '';
+            cardContainer.querySelectorAll('.highlight').forEach(card => card.classList.remove('highlight'));
 
             showLoading();
             setFeedback('Generating card...');
@@ -551,7 +589,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${apiKey}`
                     },
-                    body: JSON.stringify({ book_title: bookTitle, principle: principle, language: language })  // Pass language
+                    body: JSON.stringify({ book_title: bookTitle, principle: principle, language: language })
                 });
 
                 if (!response.ok) {
@@ -560,12 +598,6 @@
 
                 const data = await response.json();
                 cardSections = data.sections.filter(section => section.trim() !== ""); // Filter out empty sections
-
-                const cardContainer = document.getElementById('card-container');
-                cardContainer.innerHTML = ''; // Clear previous cards
-                currentCardIndex = 0; // Reset current card index
-                audioUrls = []; // Clear previous audio URLs
-                audioQueue = []; // Clear previous audio queue
 
                 // Iterate over card sections to display and read them one by one
                 for (const section of cardSections) {
@@ -591,6 +623,9 @@
                 hideLoading();
             }
         }
+
+
+
 
         function playFromCardIndex(index) {
             if (index < 0 || index >= audioUrls.length) return;
@@ -630,10 +665,22 @@
             setFeedback('Audio playback stopped.');
             isGeneratingAudio = false;
         }
+        
+        let audioGenerationController = null;
+
         async function generateAndPlayTTS(texts) {
             const apiKey = document.getElementById('api-key').value;
-            const language = document.getElementById('language-select').value; // Get the selected language
-            const speed = document.getElementById('speed-select').value; // Get the selected speed
+            const language = document.getElementById('language-select').value;
+            const speed = document.getElementById('speed-select').value;
+
+            console.log('Cancelling any ongoing audio generation requests');
+            if (audioGenerationController) {
+                audioGenerationController.abort();
+            }
+
+            console.log('Creating a new AbortController for the current audio generation request');
+            audioGenerationController = new AbortController();
+
             showLoading();
             setFeedback('Generating audio...');
             isGeneratingAudio = true;
@@ -642,13 +689,15 @@
                 for (const text of texts) {
                     if (!text.trim()) continue; // Skip empty text sections
 
+                    console.log('Generating audio for text:', text);
                     const response = await fetch('/tts', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${apiKey}`
                         },
-                        body: JSON.stringify({ texts: [text], language: language }) // Pass language
+                        body: JSON.stringify({ texts: [text], language: language }),
+                        signal: audioGenerationController.signal // Pass the AbortSignal to the fetch request
                     });
 
                     if (!response.ok) {
@@ -657,6 +706,7 @@
 
                     const data = await response.json();
                     if (data.urls && data.urls.length > 0) {
+                        console.log('Adding audio URLs to the queue:', data.urls);
                         audioUrls.push(...data.urls);
                         audioQueue.push(...data.urls);
 
@@ -672,12 +722,18 @@
                     isGeneratingAudio = false;
                 }
             } catch (error) {
-                setFeedback(`Failed to generate audio: ${error.message}`);
-                isGeneratingAudio = false;
+                if (error.name === 'AbortError') {
+                    console.log('Audio generation request cancelled');
+                } else {
+                    console.error('Failed to generate audio:', error);
+                    setFeedback(`Failed to generate audio: ${error.message}`);
+                    isGeneratingAudio = false;
+                }
             } finally {
                 hideLoading();
             }
         }
+
     </script>
 
 </body>
