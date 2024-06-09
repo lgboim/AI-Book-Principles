@@ -551,7 +551,6 @@
             isPlaying = false;
             playNextAudio();
         }
-
         function pauseAudio() {
             if (isPlaying && !isPaused) {
                 audioPlayer.pause();
@@ -718,6 +717,16 @@
             setTimeout(() => preloadAndPlayAudio(url), 1000);
         }
 
+        // Ensure the menu is initially hidden
+        document.addEventListener('DOMContentLoaded', () => {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            if (isIOS) {
+                setFeedback('Tap to enable audio.');
+                document.body.addEventListener('click', () => {
+                    setFeedback('');
+                }, { once: true });
+            }
+        });
 
         function highlightAndScrollToCard(index) {
             const card = document.querySelector(`.card:nth-child(${index + 1})`);
