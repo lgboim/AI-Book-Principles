@@ -687,19 +687,16 @@
                     highlightAndScrollToCard(currentCardIndex);
                     audioPlayer.onended = handleAudioEnd;
                 }).catch(error => {
-                    // Handle play error due to iOS restrictions
+                    // Likely due to the iOS restrictions
                     setFeedback('Tap to play audio.');
+                    // Listen for a user interaction anywhere on the body to play audio
                     document.body.addEventListener('click', playAudioAfterInteraction, { once: true });
                 });
             }
         }
 
         function playAudioAfterInteraction() {
-            audioPlayer.play().then(() => {
-                highlightAndScrollToCard(currentCardIndex); // Ensure the card is highlighted after playback starts
-            }).catch(playbackError => {
-                console.error('Error playing audio after user interaction:', playbackError);
-            });
+            tryPlayAudio();  // Attempt to play the audio again after user interaction
         }
 
         function handleAudioEnd() {
