@@ -601,7 +601,7 @@
                 for (const text of texts) {
                     if (!text.trim()) continue;
 
-                    const response = await fetch('/tts', {
+                    const response = await fetch('https://ai-books-6344d6836dd4.herokuapp.com/tts', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -610,6 +610,7 @@
                         body: JSON.stringify({ texts: [text], language: language }),
                         signal: audioGenerationController.signal
                     });
+
 
                     if (!response.ok) {
                         if (response.status === 400 && response.statusText === 'Request aborted') {
