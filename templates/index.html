@@ -330,6 +330,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
     <script>
         let currentCardIndex = 0;
         let cardSections = [];
@@ -338,12 +339,18 @@
         let audioQueue = [];
         let isPaused = false;
         let isGeneratingAudio = false; // Flag to track audio generation status
+        let audioGenerationController = null;
         const audioPlayer = document.getElementById('audio-player');
 
         function toggleMenu() {
             const menu = document.querySelector('.menu');
             menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'flex' : 'none';
         }
+
+        // Ensure the menu is initially hidden
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelector('.menu').style.display = 'none';
+        });
 
         function showLoading() {
             document.getElementById('loading').style.display = 'block';
@@ -401,8 +408,7 @@
                 hideLoading();
             }
         }
-        stopAudio();
-        document.getElementById('card-container').innerHTML = '';
+
         async function suggestPrinciples() {
             const apiKey = document.getElementById('api-key').value;
             const bookTitle = document.getElementById('book-list').value;
@@ -416,6 +422,12 @@
             // Stop audio playback and clear audio queue
             stopAudio();
             audioQueue = [];
+
+            // Cancel any ongoing audio generation
+            if (audioGenerationController) {
+                audioGenerationController.abort();
+                audioGenerationController = null;
+            }
 
             showLoading();
             setFeedback('Fetching principles...');
@@ -453,105 +465,6 @@
             }
         }
 
-
-
-        function playNextAudio() {
-            if (audioQueue.length === 0) {
-                setFeedback('Finished playing all audios.');
-                isPlaying = false;
-                isGeneratingAudio = false;
-                return;
-            }
-
-            const audioUrl = audioQueue.shift();
-            preloadAndPlayAudio(audioUrl);
-
-            // Highlight the corresponding text section
-            highlightAndScrollToCard(currentCardIndex);
-        }
-
-
-        function preloadAndPlayAudio(url) {
-            const audio = new Audio(url);
-            audio.preload = 'auto';
-
-            audio.oncanplaythrough = () => {
-                audioPlayer.src = url;
-                audioPlayer.playbackRate = parseFloat(document.getElementById('speed-select').value);
-                audioPlayer.load();  // Explicitly load the audio for iOS
-                tryPlayAudio();
-            };
-
-            audio.onerror = () => {
-                console.error('Failed to load audio:', url);
-                setFeedback('Failed to load audio, retrying...');
-                retryPlayAudio(url);
-            };
-            audioPlayer.play().catch(error => {
-                // Likely an iOS issue, request user interaction
-                console.error('Error playing audio:', error);
-                setFeedback('Tap to play audio.');
-                // Attach a one-time event listener to play the audio
-                document.body.addEventListener('click', function playAudioAfterInteraction() {
-                    audioPlayer.play().then(() => {
-                        document.body.removeEventListener('click', playAudioAfterInteraction);
-                        highlightAndScrollToCard(currentCardIndex); // Ensure the card is highlighted after playback starts
-                    }).catch(playbackError => {
-                        console.error('Error playing audio after user interaction:', playbackError);
-                    });
-                });
-            });
-
-        }
-
-        function tryPlayAudio() {
-            console.log('Trying to play audio for card index:', currentCardIndex);
-            audioPlayer.play().then(() => {
-                console.log('Audio started playing for card index:', currentCardIndex);
-                isPlaying = true;
-                isPaused = false;
-                highlightAndScrollToCard(currentCardIndex);
-                audioPlayer.onended = handleAudioEnd;
-            }).catch(error => {
-                console.error('Error playing audio:', error);
-                setFeedback('Tap to play audio.');
-                // Attach a one-time event listener to play the audio
-                document.body.addEventListener('click', function playAudioAfterInteraction() {
-                    audioPlayer.play().then(() => {
-                        document.body.removeEventListener('click', playAudioAfterInteraction);
-                        highlightAndScrollToCard(currentCardIndex); // Ensure the card is highlighted after playback starts
-                    }).catch(playbackError => {
-                        console.error('Error playing audio after user interaction:', playbackError);
-                    });
-                });
-            });
-        }
-
-
-        function handleAudioEnd() {
-            currentCardIndex++;
-            if (currentCardIndex < cardSections.length) {
-                playNextAudio();  // Continue to next card's audio if available
-            } else {
-                setFeedback('Finished playing all cards for the current principle.');
-                isPlaying = false;
-                isGeneratingAudio = false;
-            }
-        }
-
-        function retryPlayAudio(url) {
-            setTimeout(() => preloadAndPlayAudio(url), 1000);
-        }
-
-        function highlightAndScrollToCard(index) {
-            const card = document.querySelector(`.card:nth-child(${index + 1})`);
-            if (card) {
-                document.querySelectorAll('.card.highlight').forEach(card => card.classList.remove('highlight'));
-                card.classList.add('highlight');
-                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }
-
         async function generateCard() {
             const apiKey = document.getElementById('api-key').value;
             const bookTitle = document.getElementById('book-list').value;
@@ -566,6 +479,12 @@
             // Stop audio playback and clear audio queue
             stopAudio();
             audioQueue = [];
+
+            // Cancel any ongoing audio generation
+            if (audioGenerationController) {
+                audioGenerationController.abort();
+                audioGenerationController = null;
+            }
 
             // Clear previous audio URLs and audio queue
             audioUrls = [];
@@ -624,14 +543,11 @@
             }
         }
 
-
-
-
         function playFromCardIndex(index) {
             if (index < 0 || index >= audioUrls.length) return;
 
             currentCardIndex = index;
-            audioQueue = audioUrls.slice(index); // Set audio queue starting from the clicked card
+            audioQueue = audioUrls.slice(index);
             isPlaying = false;
             playNextAudio();
         }
@@ -665,20 +581,16 @@
             setFeedback('Audio playback stopped.');
             isGeneratingAudio = false;
         }
-        
-        let audioGenerationController = null;
 
         async function generateAndPlayTTS(texts) {
             const apiKey = document.getElementById('api-key').value;
             const language = document.getElementById('language-select').value;
             const speed = document.getElementById('speed-select').value;
 
-            console.log('Cancelling any ongoing audio generation requests');
             if (audioGenerationController) {
                 audioGenerationController.abort();
             }
 
-            console.log('Creating a new AbortController for the current audio generation request');
             audioGenerationController = new AbortController();
 
             showLoading();
@@ -687,9 +599,8 @@
 
             try {
                 for (const text of texts) {
-                    if (!text.trim()) continue; // Skip empty text sections
+                    if (!text.trim()) continue;
 
-                    console.log('Generating audio for text:', text);
                     const response = await fetch('/tts', {
                         method: 'POST',
                         headers: {
@@ -697,16 +608,19 @@
                             'Authorization': `Bearer ${apiKey}`
                         },
                         body: JSON.stringify({ texts: [text], language: language }),
-                        signal: audioGenerationController.signal // Pass the AbortSignal to the fetch request
+                        signal: audioGenerationController.signal
                     });
 
                     if (!response.ok) {
-                        throw new Error(`Error: ${response.statusText}`);
+                        if (response.status === 400 && response.statusText === 'Request aborted') {
+                            break;
+                        } else {
+                            throw new Error(`Error: ${response.statusText}`);
+                        }
                     }
 
                     const data = await response.json();
                     if (data.urls && data.urls.length > 0) {
-                        console.log('Adding audio URLs to the queue:', data.urls);
                         audioUrls.push(...data.urls);
                         audioQueue.push(...data.urls);
 
@@ -725,7 +639,6 @@
                 if (error.name === 'AbortError') {
                     console.log('Audio generation request cancelled');
                 } else {
-                    console.error('Failed to generate audio:', error);
                     setFeedback(`Failed to generate audio: ${error.message}`);
                     isGeneratingAudio = false;
                 }
@@ -734,7 +647,103 @@
             }
         }
 
-    </script>
+        function playNextAudio() {
+            if (audioQueue.length === 0) {
+                setFeedback('Finished playing all audios.');
+                isPlaying = false;
+                isGeneratingAudio = false;
+                return;
+            }
 
+            const audioUrl = audioQueue.shift();
+            preloadAndPlayAudio(audioUrl);
+
+            highlightAndScrollToCard(currentCardIndex);
+        }
+
+        function preloadAndPlayAudio(url) {
+            const audio = new Audio(url);
+            audio.preload = 'auto';
+
+            audio.oncanplaythrough = () => {
+                audioPlayer.src = url;
+                audioPlayer.playbackRate = parseFloat(document.getElementById('speed-select').value);
+                audioPlayer.load();
+                tryPlayAudio();
+            };
+
+            audio.onerror = () => {
+                retryPlayAudio(url);
+            };
+        }
+
+        function tryPlayAudio() {
+            audioPlayer.play().then(() => {
+                isPlaying = true;
+                isPaused = false;
+                highlightAndScrollToCard(currentCardIndex);
+                audioPlayer.onended = handleAudioEnd;
+            }).catch(error => {
+                setFeedback('Tap to play audio.');
+                document.body.addEventListener('click', function playAudioAfterInteraction() {
+                    audioPlayer.play().then(() => {
+                        document.body.removeEventListener('click', playAudioAfterInteraction);
+                        highlightAndScrollToCard(currentCardIndex);
+                    }).catch(playbackError => {});
+                });
+            });
+        }
+
+        function handleAudioEnd() {
+            currentCardIndex++;
+            if (currentCardIndex < cardSections.length) {
+                playNextAudio();
+            } else {
+                setFeedback('Finished playing all cards for the current principle.');
+                isPlaying = false;
+                isGeneratingAudio = false;
+            }
+        }
+
+        function retryPlayAudio(url) {
+            setTimeout(() => preloadAndPlayAudio(url), 1000);
+        }
+
+        function highlightAndScrollToCard(index) {
+            const card = document.querySelector(`.card:nth-child(${index + 1})`);
+            if (card) {
+                document.querySelectorAll('.card.highlight').forEach(card => card.classList.remove('highlight'));
+                card.classList.add('highlight');
+                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // Get the principle select element and the audio player element
+        const principleSelect = document.getElementById('principle-list');
+
+        // Add an event listener to the principle select element
+        principleSelect.addEventListener('change', function() {
+            // Pause the audio player
+            audioPlayer.pause();
+
+            // Get the selected principle
+            const selectedPrinciple = this.value;
+
+            // You can add code here to fetch the audio URL for the selected principle
+            // and start playing the audio for the new principle
+            // For example:
+            // fetchAudioURL(selectedPrinciple).then(function(audioURL) {
+            //     audioPlayer.src = audioURL;
+            //     audioPlayer.play();
+            // });
+        });
+
+        // Add an event listener to the audio player for the 'ended' event
+        audioPlayer.addEventListener('ended', function() {
+            // Play the next audio file in the queue
+            playNextAudio();
+        });
+
+    </script>
 </body>
 </html>
