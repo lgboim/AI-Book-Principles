@@ -4,8 +4,10 @@ import os
 import uuid
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # Database configuration
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///local_database.db')
@@ -184,8 +186,7 @@ def tts():
                 audio_path = os.path.join(app.static_folder, existing_card.audio_path)
                 if os.path.exists(audio_path):
                     app.logger.info(f"Using existing audio file: {existing_card.audio_path}")
-                    scheme = 'https' if request.is_secure else 'http'
-                    audio_urls.append(f"{scheme}://{request.host}/static/{existing_card.audio_path}")
+                    audio_urls.append(url_for('static', filename=existing_card.audio_path, _external=True))
                     continue
                 else:
                     app.logger.info(f"Audio file not found, will generate: {existing_card.audio_path}")
@@ -216,9 +217,8 @@ def tts():
                 db.session.add(new_card)
                 db.session.commit()
 
-            app.logger.info(f"Generated audio URL: {audio_urls[-1]}")
-            scheme = 'https' if request.is_secure else 'http'
-            audio_urls.append(f"{scheme}://{request.host}/static/{file_name}")
+            app.logger.info(f"Generated audio path: {file_name}")
+            audio_urls.append(url_for('static', filename=file_name, _external=True))
 
         except Exception as e:
             app.logger.error(f"Error generating TTS for text: {text} - {str(e)}")
