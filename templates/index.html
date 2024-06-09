@@ -688,13 +688,13 @@
                     highlightAndScrollToCard(currentCardIndex);
                     audioPlayer.onended = handleAudioEnd;
                 }).catch(error => {
-                    // Likely due to the iOS restrictions
-                    setFeedback('Tap to play audio.');
-                    // Listen for a user interaction anywhere on the body to play audio
+                    console.error("Playback failed:", error);
+                    setFeedback('Error in playing audio. Tap to retry.');
                     document.body.addEventListener('click', playAudioAfterInteraction, { once: true });
                 });
             }
         }
+
 
         function playAudioAfterInteraction() {
             tryPlayAudio();  // Attempt to play the audio again after user interaction
