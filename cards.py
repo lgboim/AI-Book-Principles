@@ -216,7 +216,7 @@ def tts():
                 db.session.add(new_card)
                 db.session.commit()
 
-            app.logger.info(f"Generated audio path: {file_name}")
+            app.logger.info(f"Generated audio URL: {audio_urls[-1]}")
             scheme = 'https' if request.is_secure else 'http'
             audio_urls.append(f"{scheme}://{request.host}/static/{file_name}")
 
