@@ -5,5 +5,3 @@ werkzeug
 SQLAlchemy==1.4.22
 psycopg2-binary==2.9.1
 Flask-Migrate==2.7.0
-flask_sqlalchemy
-flask_cors
