@@ -609,12 +609,12 @@
                 setFeedback('Moving to the next principle...');
                 principleList.selectedIndex = nextPrincipleIndex;
                 await generateCard(); // Generate or fetch the next principle
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before playing next audio to sync
                 generateAndPlayTTS(cardSections);
             } else {
                 setFeedback('Finished reading all principles.');
             }
         }
-
         function playNextAudio() {
             if (audioQueue.length === 0) {
                 isPlaying = false;
