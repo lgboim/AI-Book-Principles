@@ -584,6 +584,9 @@
             const cards = document.querySelectorAll('.card');
             cards.forEach((card, idx) => {
                 card.classList.toggle('highlight', idx === index);
+                if (idx === index) {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             });
         }
 
