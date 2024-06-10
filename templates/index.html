@@ -609,6 +609,7 @@
             if (audioQueue.length === 0) {
                 isPlaying = false;
                 isGeneratingAudio = false;
+                moveToNextPrinciple(); // Move to the next principle when done with the current one
                 return;
             }
             const audioUrl = audioQueue.shift();
