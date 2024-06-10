@@ -593,7 +593,6 @@
             audioQueue = audioUrls.slice(index); // Set audio queue starting from the clicked card
             playNextAudio();
         }
-
         function highlightCard(index) {
             const cards = document.querySelectorAll('.card');
             cards.forEach((card, idx) => {
@@ -610,10 +609,12 @@
                 setFeedback('Moving to the next principle...');
                 principleList.selectedIndex = nextPrincipleIndex;
                 await generateCard(); // Generate or fetch the next principle
+                generateAndPlayTTS(cardSections);
             } else {
                 setFeedback('Finished reading all principles.');
             }
         }
+
         function playNextAudio() {
             if (audioQueue.length === 0) {
                 isPlaying = false;
@@ -638,6 +639,9 @@
                     await generateAndPlayTTS([cardSections[currentCardIndex]]); // Generate and play next audio if not exists
                 } else {
                     playNextAudio();
+                }
+                if (audioQueue.length === 0 && currentCardIndex >= cardSections.length) {
+                    moveToNextPrinciple(); // Move to the next principle if finished reading the current one
                 }
             };
         }
