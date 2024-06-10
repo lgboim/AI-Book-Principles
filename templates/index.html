@@ -635,16 +635,14 @@
             });
             audioPlayer.onended = async () => {
                 currentCardIndex++;
-                if (audioQueue.length === 0 && currentCardIndex < cardSections.length) {
+                if (currentCardIndex < cardSections.length) {
                     await generateAndPlayTTS([cardSections[currentCardIndex]]); // Generate and play next audio if not exists
                 } else {
-                    playNextAudio();
-                }
-                if (audioQueue.length === 0 && currentCardIndex >= cardSections.length) {
                     moveToNextPrinciple(); // Move to the next principle if finished reading the current one
                 }
             };
         }
+
         function resumeAudio() {
             if (isPaused) {
                 audioPlayer.play().then(() => {
