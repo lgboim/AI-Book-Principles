@@ -551,7 +551,7 @@
                                 body: JSON.stringify({ texts: [text], language: language }) // Pass language
                             });
 
-                            if (!response.ok || !isGeneratingAudio) {
+                            if (!response.ok) {
                                 throw new Error(`Error: ${response.statusText}`);
                             }
 
@@ -621,18 +621,14 @@
                 console.error('Error playing audio:', error);
                 setTimeout(playNextAudio, 1000); // Retry playing the audio after a delay
             });
-            audioPlayer.onended = () => {
+            audioPlayer.onended = async () => {
                 currentCardIndex++;
+                if (audioQueue.length === 0 && currentCardIndex < cardSections.length) {
+                    await generateAndPlayTTS([cardSections[currentCardIndex]]); // Generate and play next audio if not exists
+                }
                 playNextAudio();
             };
         }
-        function pauseAudio() {
-            if (isPlaying && !isPaused) {
-                audioPlayer.pause();
-                isPaused = true;
-            }
-        }
-
         function resumeAudio() {
             if (isPaused) {
                 audioPlayer.play().then(() => {
@@ -640,6 +636,12 @@
                 }).catch(error => {
                     console.error('Error resuming audio:', error);
                 });
+            }
+        }
+        function pauseAudio() {
+            if (isPlaying && !isPaused) {
+                audioPlayer.pause();
+                isPaused = true;
             }
         }
         function stopAudio() {
