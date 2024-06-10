@@ -537,27 +537,35 @@
                     const text = texts[i];
                     if (!text.trim() || !isGeneratingAudio) continue; // Skip empty text sections or if generation is stopped
 
-                    const response = await fetch('/tts', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${apiKey}`
-                        },
-                        body: JSON.stringify({ texts: [text], language: language }) // Pass language
-                    });
+                    let response;
+                    try {
+                        response = await fetch('/tts', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${apiKey}`
+                            },
+                            body: JSON.stringify({ texts: [text], language: language }) // Pass language
+                        });
 
-                    if (!response.ok || !isGeneratingAudio) {
-                        throw new Error(`Error: ${response.statusText}`);
-                    }
+                        if (!response.ok || !isGeneratingAudio) {
+                            throw new Error(`Error: ${response.statusText}`);
+                        }
 
-                    const data = await response.json();
-                    if (data.urls && data.urls.length > 0) {
-                        audioUrls.push(data.urls[0]); // Use only the first URL for each text
-                        audioQueue.push(data.urls[0]);
+                        const data = await response.json();
+                        if (data.urls && data.urls.length > 0) {
+                            audioUrls.push(data.urls[0]); // Use only the first URL for each text
+                            audioQueue.push(data.urls[0]);
 
-                        if (!isPlaying && isGeneratingAudio) {
-                            setFeedback('Audio is being played.');
-                            playNextAudio();
+                            if (!isPlaying && isGeneratingAudio) {
+                                setFeedback('Audio is being played.');
+                                playNextAudio();
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error generating audio:', error);
+                        if (i < texts.length - 1) {
+                            i--; // Retry current text
                         }
                     }
                 }
@@ -572,7 +580,6 @@
                 hideLoading();
             }
         }
-
         function playFromCardIndex(index) {
             stopAudio(); // Stop audio when playing from a specific card index
             currentCardIndex = index;
@@ -611,7 +618,6 @@
                 playNextAudio();
             };
         }
-
         function pauseAudio() {
             if (isPlaying && !isPaused) {
                 audioPlayer.pause();
