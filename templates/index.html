@@ -538,34 +538,42 @@
                     if (!text.trim() || !isGeneratingAudio) continue; // Skip empty text sections or if generation is stopped
 
                     let response;
-                    try {
-                        response = await fetch('/tts', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${apiKey}`
-                            },
-                            body: JSON.stringify({ texts: [text], language: language }) // Pass language
-                        });
+                    let retries = 3; // Number of retries for each text
 
-                        if (!response.ok || !isGeneratingAudio) {
-                            throw new Error(`Error: ${response.statusText}`);
-                        }
+                    while (retries > 0) {
+                        try {
+                            response = await fetch('/tts', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${apiKey}`
+                                },
+                                body: JSON.stringify({ texts: [text], language: language }) // Pass language
+                            });
 
-                        const data = await response.json();
-                        if (data.urls && data.urls.length > 0) {
-                            audioUrls.push(data.urls[0]); // Use only the first URL for each text
-                            audioQueue.push(data.urls[0]);
-
-                            if (!isPlaying && isGeneratingAudio) {
-                                setFeedback('Audio is being played.');
-                                playNextAudio();
+                            if (!response.ok || !isGeneratingAudio) {
+                                throw new Error(`Error: ${response.statusText}`);
                             }
-                        }
-                    } catch (error) {
-                        console.error('Error generating audio:', error);
-                        if (i < texts.length - 1) {
-                            i--; // Retry current text
+
+                            const data = await response.json();
+                            if (data.urls && data.urls.length > 0) {
+                                audioUrls.push(data.urls[0]); // Use only the first URL for each text
+                                audioQueue.push(data.urls[0]);
+
+                                if (!isPlaying && isGeneratingAudio) {
+                                    setFeedback('Audio is being played.');
+                                    playNextAudio();
+                                }
+                                break; // Exit retry loop on success
+                            }
+                        } catch (error) {
+                            console.error('Error generating audio:', error);
+                            retries--;
+                            if (retries === 0) {
+                                setFeedback(`Failed to generate audio for text: ${text}`);
+                            } else {
+                                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before retrying
+                            }
                         }
                     }
                 }
