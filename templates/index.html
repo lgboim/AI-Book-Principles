@@ -330,13 +330,14 @@
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
+        let isGeneratingAudio = false; // Flag to track audio generation status
         let currentCardIndex = 0;
         let cardSections = [];
         let audioUrls = [];
-        let isPlaying = false;
         let audioQueue = [];
+        let isPlaying = false;
         let isPaused = false;
-        let isGeneratingAudio = false; // Flag to track audio generation status
+
         const audioPlayer = document.getElementById('audio-player');
 
         function toggleMenu() {
@@ -402,6 +403,8 @@
         }
 
         async function suggestPrinciples() {
+            stopAudio();
+            isGeneratingAudio = false;
             const apiKey = document.getElementById('api-key').value;
             const bookTitle = document.getElementById('book-list').value;
             const language = document.getElementById('language-select').value;
@@ -448,6 +451,8 @@
         }
 
         async function generateCard() {
+            stopAudio();
+            isGeneratingAudio = false;
             const apiKey = document.getElementById('api-key').value;
             const bookTitle = document.getElementById('book-list').value;
             const principle = document.getElementById('principle-list').value;
@@ -515,19 +520,22 @@
         }
 
         async function generateAndPlayTTS(texts) {
+            if (isGeneratingAudio) return; // Prevent new audio generation if already generating
+            stopAudio(); // Stop any ongoing audio generation or playback
+            isGeneratingAudio = true; // Set the flag to indicate audio generation is in progress
+
             const apiKey = document.getElementById('api-key').value;
             const language = document.getElementById('language-select').value; // Get the selected language
             const speed = document.getElementById('speed-select').value; // Get the selected speed
             showLoading();
             setFeedback('Generating audio...');
-            isGeneratingAudio = true;
             audioUrls = []; // Clear existing audio URLs
             audioQueue = []; // Clear existing audio queue
 
             try {
                 for (let i = 0; i < texts.length; i++) {
                     const text = texts[i];
-                    if (!text.trim()) continue; // Skip empty text sections
+                    if (!text.trim() || !isGeneratingAudio) continue; // Skip empty text sections or if generation is stopped
 
                     const response = await fetch('/tts', {
                         method: 'POST',
@@ -538,7 +546,7 @@
                         body: JSON.stringify({ texts: [text], language: language }) // Pass language
                     });
 
-                    if (!response.ok) {
+                    if (!response.ok || !isGeneratingAudio) {
                         throw new Error(`Error: ${response.statusText}`);
                     }
 
@@ -547,7 +555,7 @@
                         audioUrls.push(data.urls[0]); // Use only the first URL for each text
                         audioQueue.push(data.urls[0]);
 
-                        if (!isPlaying) {
+                        if (!isPlaying && isGeneratingAudio) {
                             setFeedback('Audio is being played.');
                             playNextAudio();
                         }
@@ -556,86 +564,48 @@
 
                 if (audioQueue.length === 0) {
                     setFeedback('No audio generated.');
-                    isGeneratingAudio = false;
-
-                    // Move to the next principle if no audio is generated
-                    const principleList = document.getElementById('principle-list');
-                    const nextPrincipleIndex = principleList.selectedIndex + 1;
-                    if (nextPrincipleIndex < principleList.options.length) {
-                        setFeedback('Moving to the next principle...');
-                        principleList.selectedIndex = nextPrincipleIndex;
-                        generateCard();
-                    }
                 }
             } catch (error) {
                 setFeedback(`Failed to generate audio: ${error.message}`);
-                isGeneratingAudio = false;
             } finally {
+                isGeneratingAudio = false;
                 hideLoading();
             }
         }
 
         function playFromCardIndex(index) {
-            if (index < 0 || index >= audioUrls.length) return;
-
+            stopAudio(); // Stop audio when playing from a specific card index
             currentCardIndex = index;
             audioQueue = audioUrls.slice(index); // Set audio queue starting from the clicked card
-            isPlaying = false;
             playNextAudio();
         }
 
         function highlightCard(index) {
             const cards = document.querySelectorAll('.card');
             cards.forEach((card, idx) => {
-                if (idx === index) {
-                    card.classList.add('highlight');
-                    card.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' });
-                } else {
-                    card.classList.remove('highlight');
-                }
+                card.classList.toggle('highlight', idx === index);
             });
         }
 
         function playNextAudio() {
             if (audioQueue.length === 0) {
-                setFeedback('Finished playing all audios.');
                 isPlaying = false;
                 isGeneratingAudio = false;
-
-                // Move to the next principle after all audio has finished
-                const principleList = document.getElementById('principle-list');
-                const nextPrincipleIndex = principleList.selectedIndex + 1;
-                if (nextPrincipleIndex < principleList.options.length) {
-                    setFeedback('Moving to the next principle...');
-                    principleList.selectedIndex = nextPrincipleIndex;
-                    generateCard();
-                }
                 return;
             }
-
             const audioUrl = audioQueue.shift();
             audioPlayer.src = audioUrl;
-            audioPlayer.playbackRate = parseFloat(document.getElementById('speed-select').value); // Set playback rate based on speed selection
             audioPlayer.play().then(() => {
                 isPlaying = true;
                 isPaused = false;
-
-                // Highlight and scroll to the current card when the audio starts playing
                 highlightCard(currentCardIndex);
             }).catch(error => {
                 console.error('Error playing audio:', error);
-                setFeedback('Failed to play audio.');
+                setTimeout(playNextAudio, 1000); // Retry playing the audio after a delay
             });
-
             audioPlayer.onended = () => {
                 currentCardIndex++;
                 playNextAudio();
-            };
-            audioPlayer.onpause = () => {
-                isPaused = true;
-            };
-            audioPlayer.onplay = () => {
-                isPaused = false;
             };
         }
 
@@ -643,7 +613,6 @@
             if (isPlaying && !isPaused) {
                 audioPlayer.pause();
                 isPaused = true;
-                setFeedback('Audio paused.');
             }
         }
 
@@ -651,24 +620,19 @@
             if (isPaused) {
                 audioPlayer.play().then(() => {
                     isPaused = false;
-                    setFeedback('Audio resumed.');
                 }).catch(error => {
                     console.error('Error resuming audio:', error);
-                    setFeedback('Failed to resume audio.');
                 });
             }
         }
-
         function stopAudio() {
             audioPlayer.pause();
             audioPlayer.currentTime = 0;
             audioQueue = [];
-            isPaused = false;
             isPlaying = false;
-            setFeedback('Audio playback stopped.');
+            isPaused = false;
             isGeneratingAudio = false;
         }
-
     </script>
 
 </body>
