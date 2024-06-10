@@ -526,7 +526,6 @@
 
             const apiKey = document.getElementById('api-key').value;
             const language = document.getElementById('language-select').value; // Get the selected language
-            const speed = document.getElementById('speed-select').value; // Get the selected speed
             showLoading();
             setFeedback('Generating audio...');
             audioUrls = []; // Clear existing audio URLs
@@ -604,7 +603,17 @@
                 }
             });
         }
-
+        async function moveToNextPrinciple() {
+            const principleList = document.getElementById('principle-list');
+            const nextPrincipleIndex = principleList.selectedIndex + 1;
+            if (nextPrincipleIndex < principleList.options.length) {
+                setFeedback('Moving to the next principle...');
+                principleList.selectedIndex = nextPrincipleIndex;
+                await generateCard(); // Generate or fetch the next principle
+            } else {
+                setFeedback('Finished reading all principles.');
+            }
+        }
         function playNextAudio() {
             if (audioQueue.length === 0) {
                 isPlaying = false;
@@ -627,8 +636,9 @@
                 currentCardIndex++;
                 if (audioQueue.length === 0 && currentCardIndex < cardSections.length) {
                     await generateAndPlayTTS([cardSections[currentCardIndex]]); // Generate and play next audio if not exists
+                } else {
+                    playNextAudio();
                 }
-                playNextAudio();
             };
         }
         function resumeAudio() {
