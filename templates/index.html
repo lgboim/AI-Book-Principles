@@ -589,7 +589,7 @@
                 isPlaying = false;
                 isPaused = false;
                 if (currentCardIndex >= cardSections.length) {
-                    moveToNextPrinciple();
+                    moveToNextPrinciple(); // Move to the next principle only if all sections have been processed
                 }
                 return;
             }
@@ -605,15 +605,16 @@
             });
 
             audioPlayer.onended = () => {
-                currentCardIndex++;
-                if (currentCardIndex < cardSections.length) {
+                if (currentCardIndex < cardSections.length - 1) {
+                    currentCardIndex++;
                     playNextAudio();
                 } else {
-                    moveToNextPrinciple(); // Move to the next principle only after all sections have been read
+                    currentCardIndex++;
+                    isPlaying = false;
+                    moveToNextPrinciple(); // Ensure moving to the next principle after finishing the current one
                 }
             };
         }
-
 
         function playFromCardIndex(index) {
             stopAudio();
